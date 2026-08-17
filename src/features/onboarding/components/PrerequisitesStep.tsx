@@ -5,15 +5,13 @@ import { CheckCircle2, ExternalLink } from "lucide-react";
 
 const prerequisites = [
   {
-    label: "Hermes installed",
-    detail: "Install via npm, pnpm, or from source",
-    link: "https://docs.hermes.ai",
-    linkLabel: "Installation docs",
+    label: "Hermes API reachable",
+    detail: "Defaults to http://localhost:8642, override with HERMES_API_URL",
   },
   {
-    label: "Gateway running",
-    detail: "Start with: hermes gateway start",
-    command: "hermes gateway start",
+    label: "Gateway adapter running",
+    detail: "Start with: npm run hermes-adapter",
+    command: "npm run hermes-adapter",
   },
   {
     label: "Gateway URL and token",
@@ -66,23 +64,14 @@ export const PrerequisitesStep = () => (
     </div>
 
     <p className="text-[10px] leading-4 text-white/40">
-      Need help? Check{" "}
+      Need help? Check the{" "}
       <a
-        href="https://docs.hermes.ai"
+        href="https://github.com/iamlukethedev/Hermes3D"
         target="_blank"
         rel="noopener noreferrer"
         className="text-amber-300/70 hover:text-amber-200"
       >
-        docs.hermes.ai
-      </a>{" "}
-      or{" "}
-      <a
-        href="https://discord.com/invite/clawd"
-        target="_blank"
-        rel="noopener noreferrer"
-        className="text-amber-300/70 hover:text-amber-200"
-      >
-        join Discord
+        Hermes3D repository
       </a>
       .
     </p>
