@@ -57,5 +57,5 @@ This file captures the near-term direction for Hermes3D so outside contributors 
 
 ## Before Starting Bigger Work
 
-- Read `README.md`, `CODE_DOCUMENTATION.md`, and `KNOWN_ISSUES.md`.
+- Read `README.md` and `CODE_DOCUMENTATION.md`.
 - Prefer opening or linking a GitHub issue before large architectural changes.

@@ -121,8 +121,6 @@ For a practical contributor code map and extension guide, see `CODE_DOCUMENTATIO
 - If multi-user support becomes important, replace the local settings store with a service-backed persistence layer and add authentication at the API boundary.
 - If the gateway protocol changes, keep the impact isolated inside `src/lib/gateway` and the Studio proxy boundary.
 
-See `KNOWN_ISSUES.md` for the current publication caveats and unresolved follow-up items.
-
 ## Diagram
 ```mermaid
 flowchart LR

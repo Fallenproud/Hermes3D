@@ -40,7 +40,7 @@ If your change touches generated UX audit artifacts, clean them before committin
 - Link to the relevant issue when possible.
 - If you changed gateway behavior, call it out explicitly.
 - Update docs when the user-facing behavior or architecture changes.
-- If you touched bundled assets, vendored code, or dependency/licensing posture, update the relevant `THIRD_PARTY_*` documentation in the same PR.
+- If you touched bundled assets, vendored code, or dependency/licensing posture, call that out in the PR description.
 
 ## Reporting issues
 When filing an issue, please include:

@@ -12,7 +12,6 @@ Hermes3D is the UI and local Studio/proxy layer around a running Hermes gateway.
 - Hermes3D owns visualization, local Studio settings, UI workflows, office rendering, and the same-origin WebSocket/API bridge.
 - When a feature needs authoritative runtime state, prefer Gateway data over local UI state.
 - When a feature is only a local preference, it usually belongs in Studio settings.
-- Before publishing new bundled assets or vendored code, also update `THIRD_PARTY_ASSETS.md` or `THIRD_PARTY_CODE.md`.
 
 ## Top-Level Code Map
 
