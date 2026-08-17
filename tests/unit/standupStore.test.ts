@@ -20,11 +20,11 @@ const writeStandupStore = (stateDir: string, store: StandupMeetingStore) => {
 };
 
 describe("standup store", () => {
-  const priorStateDir = process.env.OPENCLAW_STATE_DIR;
+  const priorStateDir = process.env.HERMES_STATE_DIR;
   let tempDir: string | null = null;
 
   afterEach(() => {
-    process.env.OPENCLAW_STATE_DIR = priorStateDir;
+    process.env.HERMES_STATE_DIR = priorStateDir;
     if (tempDir) {
       fs.rmSync(tempDir, { recursive: true, force: true });
       tempDir = null;
@@ -33,7 +33,7 @@ describe("standup store", () => {
 
   it("drops stale active gathering meetings on load", () => {
     tempDir = makeTempDir("standup-store-stale");
-    process.env.OPENCLAW_STATE_DIR = tempDir;
+    process.env.HERMES_STATE_DIR = tempDir;
     const staleIso = new Date(Date.now() - 60 * 60 * 1000).toISOString();
     writeStandupStore(tempDir, {
       activeMeeting: {
@@ -59,7 +59,7 @@ describe("standup store", () => {
 
   it("keeps fresh active gatherings on load", () => {
     tempDir = makeTempDir("standup-store-fresh");
-    process.env.OPENCLAW_STATE_DIR = tempDir;
+    process.env.HERMES_STATE_DIR = tempDir;
     const freshIso = new Date().toISOString();
     writeStandupStore(tempDir, {
       activeMeeting: {
@@ -85,7 +85,7 @@ describe("standup store", () => {
 
   it("drops stale gathering meetings even if arrivals refreshed updatedAt", () => {
     tempDir = makeTempDir("standup-store-gathering-updated");
-    process.env.OPENCLAW_STATE_DIR = tempDir;
+    process.env.HERMES_STATE_DIR = tempDir;
     const staleStartedIso = new Date(Date.now() - 10 * 60 * 1000).toISOString();
     const freshUpdatedIso = new Date().toISOString();
     writeStandupStore(tempDir, {

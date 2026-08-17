@@ -26,7 +26,7 @@ export function extractSpeechImage(
   if (imagePath.startsWith("/") || imagePath.startsWith("~/")) {
     fullPath = imagePath;
   } else {
-    fullPath = `~/.openclaw/workspace-${agentId}/${imagePath}`;
+    fullPath = `~/.hermes/workspace-${agentId}/${imagePath}`;
   }
 
   const imageUrl = `/api/gateway/media?path=${encodeURIComponent(fullPath)}`;

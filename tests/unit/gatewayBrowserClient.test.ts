@@ -1,6 +1,6 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
-import { GatewayBrowserClient } from "@/lib/gateway/openclaw/GatewayBrowserClient";
+import { GatewayBrowserClient } from "@/lib/gateway/protocol/GatewayBrowserClient";
 
 const UUID_V4_RE =
   /^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
@@ -91,7 +91,7 @@ describe("GatewayBrowserClient", () => {
     expect(frame.method).toBe("connect");
     expect(typeof frame.id).toBe("string");
     expect(frame.id).toMatch(UUID_V4_RE);
-    expect(frame.params?.client?.id).toBe("openclaw-control-ui");
+    expect(frame.params?.client?.id).toBe("hermes3d-control-ui");
   });
 
   it("truncates connect-failed close reason to websocket limit", async () => {

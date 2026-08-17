@@ -4,11 +4,11 @@ This document exists to onboard coding agents quickly when debugging:
 - Why an agent can or cannot read/write files
 - Why command execution requires approvals (or not)
 - Why a sandboxed run behaves differently from a non-sandboxed run
-- How “create agent” choices in **Hermes3D** flow into the **OpenClaw Gateway** (often running on an EC2 host) where enforcement actually happens
+- How “create agent” choices in **Hermes3D** flow into the **gateway** (often running on an EC2 host) where enforcement actually happens
 
 Scope:
 - Studio one-step agent creation and post-create authority updates, including exact gateway calls.
-- The upstream OpenClaw implementation that persists and enforces those settings at runtime.
+- The gateway-side behavior that persists and enforces those settings at runtime, described as a contract rather than as backend source code.
 
 Non-scope:
 - Full PI internal reasoning/toolchain. Studio does not implement PI logic; it configures and displays the Gateway session.
@@ -17,10 +17,10 @@ Non-scope:
 ## Mental Model (First Principles)
 
 Studio is a UI + proxy. It does two things related to “permissions”:
-1. Writes **configuration** into the Gateway (per-agent overrides in `openclaw.json`).
+1. Writes **configuration** into the Gateway (per-agent overrides in `hermes.json`).
 2. Writes **policy** into the Gateway (per-agent exec approvals in `exec-approvals.json`).
 
-The Gateway (OpenClaw) is the enforcement point:
+The Gateway is the enforcement point:
 - It decides whether a session is sandboxed.
 - It decides which workspace is mounted into the sandbox.
 - It constructs the PI toolset (read/write/edit/apply_patch/exec/etc) based on config + sandbox context.
@@ -28,15 +28,15 @@ The Gateway (OpenClaw) is the enforcement point:
 
 ## Glossary
 
-- **Gateway**: OpenClaw Gateway WebSocket server (upstream project).
+- **Gateway**: the WebSocket server Studio proxies to. In the default setup this is the Hermes gateway adapter.
 - **Studio**: this repo. Next.js UI plus a Node WS proxy.
-- **Agent**: an OpenClaw agent entry stored in gateway config (`agents.list[]`).
-- **Session key**: OpenClaw session identifier. Studio uses `agent:<agentId>:<mainKey>` for the agent’s “main” session.
+- **Agent**: an agent entry stored in gateway config (`agents.list[]`).
+- **Session key**: gateway session identifier. Studio uses `agent:<agentId>:<mainKey>` for the agent’s “main” session.
 - **Agent workspace**: a directory on the Gateway host filesystem configured per-agent (where bootstrap files and edits live).
 - **Sandbox workspace**: a separate directory used when a session is sandboxed and `workspaceAccess` is not `rw`.
 - **Sandbox mode** (`sandbox.mode`): when to sandbox (`off`, `non-main`, `all`).
 - **Workspace access** (`sandbox.workspaceAccess`): how the sandbox relates to the agent workspace (`none`, `ro`, `rw`).
-- **Tool policy** (`tools.profile`, `tools.alsoAllow`, `tools.deny`): allow/deny gating for PI tools (OpenClaw resolves effective policy).
+- **Tool policy** (`tools.profile`, `tools.alsoAllow`, `tools.deny`): allow/deny gating for PI tools (the gateway resolves effective policy).
 - **Exec approvals policy**: per-agent `{ security, ask, allowlist }` stored in exec approvals file; drives “Allow once / Always allow / Deny” UX.
 
 ## Studio: Where “Permissions” Are Chosen
@@ -63,7 +63,7 @@ Further capability changes happen from the `Capabilities` tab:
 
 ### Runtime Tool Groups Used By Capability Updates
 
-Studio capability updates rely on OpenClaw tool-group expansion (`openclaw/src/agents/tool-policy.ts`), especially:
+Studio capability updates rely on gateway-side tool-group expansion, especially:
 - `group:runtime` -> runtime execution tools (`exec`, `process`)
 
 Internal mapping detail:
@@ -83,12 +83,12 @@ sequenceDiagram
   participant UI as Studio UI
   participant L as Create lifecycle
   participant GC as Studio GatewayClient
-  participant G as OpenClaw Gateway
+  participant G as Gateway
 
   UI->>L: submit({ name, avatarSeed? })
   L->>GC: createGatewayAgent(name)
   GC->>G: config.get
-  G-->>GC: { path: ".../openclaw.json", ... }
+  G-->>GC: { path: ".../hermes.json", ... }
   GC->>G: agents.create({ name, workspace: "<stateDir>/workspace-<slug>" })
   G-->>GC: { agentId, workspace }
   L-->>UI: completion(agentId)
@@ -111,12 +111,9 @@ Important: for a remote gateway (EC2), that `workspace` path refers to the gatew
 
 Create flow does not perform setup writes during initial create anymore. If Studio needs to ensure sandbox env allowlist entries, that behavior should be attached to explicit settings/config operations rather than create-time side effects.
 
-## OpenClaw (Upstream): What `agents.create` Actually Does
+## Gateway: What `agents.create` Actually Does
 
-Gateway method:
-- `openclaw/src/gateway/server-methods/agents.ts` (`"agents.create"`)
-
-Key behaviors:
+Key behaviors of the gateway `agents.create` method:
 - Normalizes `agentId` from the provided `name` (and reserves `"default"`).
 - Uses the provided `workspace` and resolves it to an absolute path.
 - Writes a config entry for the agent (including the workspace dir and agent dir).
@@ -127,30 +124,20 @@ Key behaviors:
 
 So: the “workspace” is not a UI-only concept; it is a real directory created on the Gateway host.
 
-## OpenClaw (Upstream): Sandbox Semantics
+## Gateway: Sandbox Semantics
 
-Sandbox configuration resolution:
-- `openclaw/src/agents/sandbox/config.ts` (`resolveSandboxConfigForAgent`)
-
-Sandbox context creation (where workspace selection happens):
-- `openclaw/src/agents/sandbox/context.ts` (`resolveSandboxContext`)
-
-Docker mount behavior:
-- `openclaw/src/agents/sandbox/docker.ts` (`createSandboxContainer`)
+Sandboxing is resolved gateway-side, per agent and per session, before the PI toolset is built. Studio only writes the configuration that drives it.
 
 ### Sandbox Mode (`sandbox.mode`)
 
-Modes (as implemented upstream):
+Modes:
 - `off`: sessions are not sandboxed.
 - `all`: every session is sandboxed.
 - `non-main`: sandbox all sessions except the agent’s main session key.
 
 The “main session key” comparison is done against the configured main key, with alias-canonicalization:
-- Upstream canonicalizes the session key before comparing so that main-session aliases are treated as “main” (see `canonicalizeMainSessionAlias` in upstream sandbox runtime-status).
+- The gateway canonicalizes the session key before comparing so that main-session aliases are treated as “main”.
 - If `session.scope` is `global`, the main session key is `global` and `non-main` effectively means “sandbox everything except the global session”.
-
-Upstream implementation reference:
-- `openclaw/src/agents/sandbox/runtime-status.ts` (`resolveSandboxRuntimeStatus`)
 
 ### Sandbox Scope (`sandbox.scope`)
 
@@ -159,36 +146,30 @@ Sandbox scope controls how sandboxes are shared and therefore what persists betw
 - `agent`: per-agent sandbox workspace/container keyed by agent id (shared across that agent’s sessions)
 - `shared`: one sandbox workspace/container shared across everything (lowest isolation)
 
-Upstream implementation reference:
-- `openclaw/src/agents/sandbox/types.ts` (`SandboxScope`)
-- `openclaw/src/agents/sandbox/shared.ts` (`resolveSandboxScopeKey`)
-
 ### Workspace Access (`sandbox.workspaceAccess`)
 
-Upstream behavior (important):
+Gateway behavior (important):
 - `rw`:
   - The sandbox uses the **agent workspace** as the sandbox root.
   - PI filesystem tools (`read`/`write`/`edit`/`apply_patch`) operate on the agent workspace.
 - `ro`:
   - The sandbox uses a **sandbox workspace** as the sandbox root (writable sandbox dir).
   - The real agent workspace is mounted at `/agent` read-only for command-line inspection.
-  - PI filesystem tools are additionally restricted: upstream disables write/edit/apply_patch in this mode (see below).
+  - PI filesystem tools are additionally restricted: write/edit/apply_patch are disabled in this mode (see below).
 - `none`:
   - The sandbox uses a **sandbox workspace** as the sandbox root.
   - The agent workspace is not mounted into the container.
 
 Sandbox workspace root default:
-- `openclaw/src/agents/sandbox/constants.ts` uses `<STATE_DIR>/sandboxes` (where `STATE_DIR` defaults to `~/.openclaw` unless overridden by `OPENCLAW_STATE_DIR`).
+- `<STATE_DIR>/sandboxes`, where `STATE_DIR` defaults to `~/.hermes` unless overridden by `HERMES_STATE_DIR`.
 
 Sandbox workspace seeding:
-- When using a sandbox workspace root, upstream seeds missing bootstrap files from the agent workspace and ensures bootstrap exists:
-  - `openclaw/src/agents/sandbox/workspace.ts` (`ensureSandboxWorkspace`)
-  - The sandbox workspace also syncs skills from the agent workspace (best-effort) in `resolveSandboxContext`.
+- When using a sandbox workspace root, the gateway seeds missing bootstrap files from the agent workspace and ensures bootstrap exists.
+- The sandbox workspace also syncs skills from the agent workspace (best-effort).
 
 ### Hard Enforcement: Filesystem Tool Root Guard
 
-In upstream OpenClaw, sandboxed filesystem tools are rooted and guarded:
-- `openclaw/src/agents/pi-tools.read.ts` (`assertSandboxPath` usage)
+Sandboxed filesystem tools are rooted and guarded gateway-side.
 
 Result:
 - `read`/`write`/`edit` tools cannot access paths outside the sandbox root, even if the container has other mounts (like `/agent`).
@@ -197,16 +178,13 @@ This is intentional: the “filesystem tools” and “exec tool” have differe
 
 ## Sandbox Tool Policy (Separate From Per-Agent Tool Overrides)
 
-OpenClaw has an additional sandbox-only tool allow/deny policy:
+There is an additional sandbox-only tool allow/deny policy:
 - `tools.sandbox.tools.allow|deny` (global)
 - `agents.list[].tools.sandbox.tools.allow|deny` (per-agent override)
 
-Upstream resolution:
-- `openclaw/src/agents/sandbox/tool-policy.ts` (`resolveSandboxToolPolicyForAgent`)
-
 Important nuance:
 - If `tools.sandbox.tools.allow` is present and non-empty, it becomes an allowlist.
-- If it is set to an empty array, upstream will still auto-add `image` to the allowlist (unless explicitly denied), which often turns “empty” into effectively “image-only”.
+- If it is set to an empty array, `image` is still auto-added to the allowlist (unless explicitly denied), which often turns “empty” into effectively “image-only”.
 - If you want “allow everything” semantics in sandbox policy, prefer `["*"]` over `[]` to avoid the image auto-add corner case.
 
 This is why Studio treats some configs as “broken” and repairs them (see below).
@@ -214,20 +192,17 @@ This is why Studio treats some configs as “broken” and repairs them (see bel
 ### Policy Layering (Why “Allowed” Can Still Be Blocked)
 
 In a sandboxed session, a tool must pass multiple gates:
-- The normal tool policy gates (`tools.profile`, `tools.allow|alsoAllow`, `tools.deny`, plus any provider/group/subagent policies upstream applies).
+- The normal tool policy gates (`tools.profile`, `tools.allow|alsoAllow`, `tools.deny`, plus any provider/group/subagent policies the gateway applies).
 - The sandbox tool policy gate (`tools.sandbox.tools.allow|deny` resolved for that agent).
 
 So even if Studio enables `group:runtime` for an agent, the tool can still be blocked in sandboxed sessions if sandbox tool policy denies it.
 
-## OpenClaw (Upstream): Tool Availability and `workspaceAccess=ro`
+## Gateway: Tool Availability and `workspaceAccess=ro`
 
-PI tool construction:
-- `openclaw/src/agents/pi-tools.ts` (`createOpenClawCodingTools`)
-
-Key enforcement:
-- When sandboxed, upstream removes the normal host `write`/`edit` tools.
-- It only adds sandboxed `write`/`edit` tools if `workspaceAccess !== "ro"`.
-- It disables `apply_patch` in sandbox when `workspaceAccess === "ro"`.
+Key enforcement during PI tool construction:
+- When sandboxed, the normal host `write`/`edit` tools are removed.
+- Sandboxed `write`/`edit` tools are only added if `workspaceAccess !== "ro"`.
+- `apply_patch` is disabled in sandbox when `workspaceAccess === "ro"`.
 
 This is why “`workspaceAccess=ro`” means more than “mount it read-only”:
 - It is also a tool-policy gate that prevents direct file writes/edits through PI tools.
@@ -244,19 +219,16 @@ That operation updates:
 - per-agent tool overrides (`config.patch` via `updateGatewayAgentOverrides`)
 - session exec host/security/ask (`sessions.patch`)
 
-Upstream enforcement is unchanged: `workspaceAccess="ro"` still disables PI `write`/`edit`/`apply_patch` in sandboxed sessions.
+Gateway enforcement is unchanged: `workspaceAccess="ro"` still disables PI `write`/`edit`/`apply_patch` in sandboxed sessions.
 
 ## Session-Level Exec Settings (Where `exec` Runs)
 
-Separately from per-agent config and exec approvals, OpenClaw supports per-session exec settings:
+Separately from per-agent config and exec approvals, the gateway supports per-session exec settings:
 - `execHost`: `sandbox | gateway | node`
 - `execSecurity`: `deny | allowlist | full`
 - `execAsk`: `off | on-miss | always`
 
-These are stored in the gateway session store and mutated with `sessions.patch`:
-- Upstream method: `openclaw/src/gateway/server-methods/sessions.ts` (`"sessions.patch"`)
-- Patch application: `openclaw/src/gateway/sessions-patch.ts`
-- Session entry shape includes `execHost|execSecurity|execAsk`: `openclaw/src/config/sessions/types.ts`
+These are stored in the gateway session store and mutated with `sessions.patch`.
 
 Studio uses these fields to keep “what the UI expects” aligned with gateway runtime:
 - Hydration derives the expected values using the exec approvals policy plus sandbox mode:
@@ -270,25 +242,19 @@ Net effect:
 - Exec approvals policy controls whether the user will be prompted to approve.
 - Session exec settings control where execution happens (sandbox vs host) and the default `security/ask` values for runs.
 
-## OpenClaw (Upstream): Exec Approvals (Policy + Events)
+## Gateway: Exec Approvals (Policy + Events)
 
-Exec approvals file (defaults upstream):
-- `openclaw/src/infra/exec-approvals.ts`
-  - default file path: `~/.openclaw/exec-approvals.json`
-  - default socket path: `~/.openclaw/exec-approvals.sock`
+Exec approvals state on the gateway host:
+- default file path: `~/.hermes/exec-approvals.json`
+- default socket path: `~/.hermes/exec-approvals.sock`
 
 Gateway methods (persist policy):
-- `openclaw/src/gateway/server-methods/exec-approvals.ts`
-  - `exec.approvals.get` returns `{ path, exists, hash, file }` (socket token is redacted in responses)
-  - `exec.approvals.set` requires a matching `baseHash` when the file already exists (prevents lost updates)
+- `exec.approvals.get` returns `{ path, exists, hash, file }` (socket token is redacted in responses)
+- `exec.approvals.set` requires a matching `baseHash` when the file already exists (prevents lost updates)
 
 Approval request/resolve + broadcast events:
-- `openclaw/src/gateway/server-methods/exec-approval.ts`
-  - broadcasts `exec.approval.requested`
-  - broadcasts `exec.approval.resolved`
-
-Exec tool approval decision logic:
-- `openclaw/src/agents/bash-tools.exec.ts` (calls `requiresExecApproval`, `evaluateShellAllowlist`, etc.)
+- `exec.approval.requested`
+- `exec.approval.resolved`
 
 Studio wiring for policy persistence:
 - Studio writes per-agent policy with `exec.approvals.set`:
@@ -301,12 +267,12 @@ Studio wiring for UX:
 ## Debug Checklist (When Something Feels “Wrong”)
 
 1. Determine if the session is sandboxed and what workspace it is using.
-   - Upstream CLI helper: `openclaw sandbox explain --agent <agentId>` (see upstream `src/commands/sandbox-explain.ts`)
+   - Inspect the resolved agent config through `config.get` and compare it against the sandbox rules above.
 2. Confirm what Studio wrote:
    - Agent overrides: `config.get` and inspect `agents.list[]` entry for the agent.
    - Exec approvals: `exec.approvals.get` and inspect `file.agents[agentId]`.
 3. If file edits are not happening:
-   - Check `sandbox.workspaceAccess` (if `ro`, upstream disables write/edit/apply_patch tools in sandbox).
+   - Check `sandbox.workspaceAccess` (if `ro`, write/edit/apply_patch are disabled in sandbox).
    - Check tool policy (`tools.profile`, `tools.alsoAllow`, `tools.deny`) for explicit denies on `write`/`edit`/`apply_patch`.
 4. If approvals are not showing up:
    - Check exec approvals `security` + `ask`.
@@ -347,4 +313,4 @@ Code:
 - Detection + repair enqueue: `src/app/page.tsx` (`repair-sandbox-tool-allowlist`)
 - Gateway write: `src/lib/gateway/agentConfig.ts` (`updateGatewayAgentOverrides`)
 
-This exists to prevent sandboxed sessions from effectively losing access to almost all sandbox tools due to an empty allowlist interacting with upstream sandbox tool-policy behavior.
+This exists to prevent sandboxed sessions from effectively losing access to almost all sandbox tools due to an empty allowlist interacting with gateway sandbox tool-policy behavior.

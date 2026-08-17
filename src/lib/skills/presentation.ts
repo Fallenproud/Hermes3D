@@ -29,10 +29,10 @@ const GROUP_DEFINITIONS: Array<{ id: Exclude<SkillSourceGroupId, "other">; label
   { id: "extra", label: "Extra Skills" },
 ];
 
-const WORKSPACE_SOURCES = new Set(["openclaw-workspace", "agents-skills-personal", "agents-skills-project"]);
+const WORKSPACE_SOURCES = new Set(["hermes-workspace", "agents-skills-personal", "agents-skills-project"]);
 const REMOVABLE_SOURCES = new Set<RemovableSkillSource>([
-  "openclaw-managed",
-  "openclaw-workspace",
+  "hermes-managed",
+  "hermes-workspace",
 ]);
 
 const trimNonEmpty = (value: string): string | null => {
@@ -85,11 +85,11 @@ export const buildAgentSkillsAllowlistSet = (values: string[] | undefined): Set<
 
 const resolveGroupId = (skill: SkillStatusEntry): SkillSourceGroupId => {
   const source = trimNonEmpty(skill.source) ?? "";
-  const bundled = skill.bundled || source === "openclaw-bundled";
+  const bundled = skill.bundled || source === "hermes-bundled";
   if (bundled) return "built-in";
   if (WORKSPACE_SOURCES.has(source)) return "workspace";
-  if (source === "openclaw-managed") return "installed";
-  if (source === "openclaw-extra") return "extra";
+  if (source === "hermes-managed") return "installed";
+  if (source === "hermes-extra") return "extra";
   return "other";
 };
 
@@ -150,7 +150,7 @@ export const buildSkillMissingDetails = (skill: SkillStatusEntry): string[] => {
 
   const config = normalizeStringList(skill.missing.config);
   if (config.length > 0) {
-    details.push(`Missing config values (set in openclaw.json): ${config.join(", ")}`);
+    details.push(`Missing config values (set in hermes.json): ${config.join(", ")}`);
   }
 
   const os = normalizeStringList(skill.missing.os);
@@ -222,7 +222,7 @@ export const deriveAgentSkillDisplayState = (
 
 export const isBundledBlockedSkill = (skill: SkillStatusEntry): boolean => {
   const source = trimNonEmpty(skill.source) ?? "";
-  return (skill.bundled || source === "openclaw-bundled") && !skill.eligible;
+  return (skill.bundled || source === "hermes-bundled") && !skill.eligible;
 };
 
 export const hasInstallableMissingBinary = (skill: SkillStatusEntry): boolean => {

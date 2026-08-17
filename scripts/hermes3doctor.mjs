@@ -9,7 +9,7 @@ import {
   buildDoctorJsonReport,
   buildGatewayFailureActions,
   buildGatewayWarnings,
-  buildOpenClawWarnings,
+  buildRemoteGatewayWarnings,
   buildProfileWarnings,
   classifyGatewayFailure,
   DOCTOR_STATUSES,
@@ -20,7 +20,6 @@ import {
   shouldRunCustomChecks,
   shouldRunDemoChecks,
   shouldRunHermesChecks,
-  shouldRunOpenClawChecks,
   summarizeChecks,
 } from "./lib/hermes3doctor-core.mjs";
 
@@ -168,20 +167,6 @@ const probeHttpJson = async ({ url, headers = {}, timeoutMs = 3500 }) => {
     };
   } finally {
     clearTimeout(timeout);
-  }
-};
-
-const detectOpenClawVersion = () => {
-  try {
-    return execFileSync("openclaw", ["--version"], {
-      encoding: "utf8",
-      stdio: ["ignore", "pipe", "pipe"],
-      timeout: 4000,
-    }).trim();
-  } catch (error) {
-    return error instanceof Error
-      ? error.message
-      : "Unable to run openclaw --version";
   }
 };
 
@@ -340,7 +325,7 @@ async function main() {
           "Gateway token",
           "No gateway token is configured for the selected profile.",
           [
-            "If this backend requires token auth, set the upstream token in Hermes3D settings or openclaw.json.",
+            "If this backend requires token auth, set the upstream token in Hermes3D settings or ~/.hermes/hermes.json.",
           ],
         ),
   );
@@ -348,7 +333,7 @@ async function main() {
   for (const warning of buildProfileWarnings({ runtimeContext })) {
     checks.push(
       checkWarn("Runtime profiles", "Profile collision", warning, [
-        "Assign distinct local ports or URLs if you want OpenClaw, Hermes, and demo running simultaneously instead of swapping one backend onto the same endpoint.",
+        "Assign distinct local ports or URLs if you want Hermes and demo running simultaneously instead of swapping one backend onto the same endpoint.",
       ]),
     );
   }
@@ -397,17 +382,15 @@ async function main() {
     checks.push(checkWarn("Gateway access", "Gateway hints", warning));
   }
 
-  if (adapterInScope("openclaw", runtimeContext.adapterType === "openclaw")) {
-    for (const warning of buildOpenClawWarnings({
-      gatewayUrl: runtimeContext.gatewayUrl,
-      tokenConfigured: runtimeContext.tokenConfigured,
-    })) {
-      checks.push(
-        checkWarn("OpenClaw", "OpenClaw hints", warning, [
-          "If the browser/device is not yet approved, check `openclaw devices list` and approve the pending device before retrying the remote connection.",
-        ]),
-      );
-    }
+  for (const warning of buildRemoteGatewayWarnings({
+    gatewayUrl: runtimeContext.gatewayUrl,
+    tokenConfigured: runtimeContext.tokenConfigured,
+  })) {
+    checks.push(
+      checkWarn("Gateway access", "Remote gateway hints", warning, [
+        "If the browser/device is not yet approved, approve the pending device on the gateway host before retrying the remote connection.",
+      ]),
+    );
   }
 
   const customRuntimeInScope = args.allProfiles
@@ -472,37 +455,6 @@ async function main() {
         ),
       );
     }
-  }
-
-  const openclawConfigPath = path.join(stateDir, "openclaw.json");
-  const openclawConfigExists = fs.existsSync(openclawConfigPath);
-  if (shouldRunOpenClawChecks({ runtimeContext, openclawConfigExists })) {
-    checks.push(
-      openclawConfigExists
-        ? checkPass(
-            "OpenClaw",
-            "OpenClaw config",
-            `Found ${openclawConfigPath}.`,
-          )
-        : checkWarn(
-            "OpenClaw",
-            "OpenClaw config",
-            `No openclaw.json found at ${openclawConfigPath}.`,
-            [
-              "If you expect a local OpenClaw default, verify OPENCLAW_STATE_DIR or create openclaw.json.",
-            ],
-          ),
-    );
-
-    const version = detectOpenClawVersion();
-    const versionLooksValid = /^OpenClaw\s+/i.test(version);
-    checks.push(
-      versionLooksValid
-        ? checkPass("OpenClaw", "OpenClaw version", version)
-        : checkWarn("OpenClaw", "OpenClaw version", version, [
-            "Install OpenClaw or ensure it is available on PATH if this machine should run it directly.",
-          ]),
-    );
   }
 
   if (adapterInScope("demo", shouldRunDemoChecks({ runtimeContext, env }))) {

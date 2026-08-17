@@ -41,7 +41,7 @@ The office should feel like a real place where work happens, not only a dashboar
 - Prefer physical metaphors that make the office easier to understand.
 - Separate real operational systems from cosmetic flavor.
 - Build useful features first, then layer on simulation and style.
-- Preserve backend neutrality so these systems work across OpenClaw, Hermes, Vera, and future providers.
+- Preserve backend neutrality so these systems work across Hermes, Vera, and future providers.
 
 ## V1: Useful Office Systems
 

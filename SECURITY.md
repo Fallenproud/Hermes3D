@@ -23,7 +23,7 @@ We aim to acknowledge reports promptly, investigate them, and coordinate a fix a
 
 ## Current Security Limitations
 
-- Studio gateway settings are stored on disk in plaintext under the local OpenClaw state directory.
+- Studio gateway settings are stored on disk in plaintext under the local Hermes state directory (`~/.hermes/hermes3d/settings.json`).
 - The current UI loads the configured upstream gateway URL/token into browser memory at runtime, even though those values are not stored in browser persistent storage.
 - There is currently no built-in cookie issuance/login flow for `STUDIO_ACCESS_TOKEN`; deployments that enable the access gate must provision the `studio_access` cookie outside the app.
 

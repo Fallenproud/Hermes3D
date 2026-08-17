@@ -240,7 +240,7 @@ const buildCardFromExplicitEvent = (
       existing?.status ??
       (explicit.kind === "playbook_triggered" ? "todo" : "todo"),
     source:
-      explicit.kind === "playbook_triggered" ? "playbook" : "openclaw_event",
+      explicit.kind === "playbook_triggered" ? "playbook" : "hermes_event",
     sourceEventId: explicit.sourceEventId,
     assignedAgentId:
       explicit.assignedAgentId ?? existing?.assignedAgentId ?? null,
@@ -268,7 +268,7 @@ const buildCardFromGatewayTask = (
     title: task.title,
     description: task.description ?? existing?.description ?? "",
     status: task.status,
-    source: task.source ?? existing?.source ?? "openclaw_event",
+    source: task.source ?? existing?.source ?? "hermes_event",
     sourceEventId: task.sourceEventId ?? existing?.sourceEventId ?? null,
     assignedAgentId: task.assignedAgentId ?? existing?.assignedAgentId ?? null,
     createdAt: task.createdAt,
@@ -407,7 +407,7 @@ export const deriveRecoveredAgentRequestCard = (
       title: truncateTitle(text, "Recovered request"),
       description: text,
       status: "todo",
-      source: "openclaw_event",
+      source: "hermes_event",
       sourceEventId: requestKey,
       assignedAgentId: agent.agentId,
       createdAt: timestamp,
@@ -436,7 +436,7 @@ export const deriveRecoveredAgentRequestCard = (
     title: truncateTitle(fallbackText, "Recovered request"),
     description: fallbackText,
     status: "todo",
-    source: "openclaw_event",
+    source: "hermes_event",
     sourceEventId: fallbackKey,
     assignedAgentId: agent.agentId,
     createdAt: fallbackTimestamp,
@@ -462,7 +462,7 @@ export const deriveLiveSessionTaskCard = (
   agents: AgentState[],
 ): TaskBoardCard | null =>
   deriveChatRequestCard(event, agents, {
-    source: "openclaw_event",
+    source: "hermes_event",
     isInferred: false,
   });
 
@@ -751,7 +751,7 @@ export const useTaskBoardController = ({
           ...task,
           id: task.id,
           title: task.title,
-          source: "openclaw_event",
+          source: "hermes_event",
           sourceEventId: task.sourceEventId ?? task.id,
           isInferred: false,
         });
@@ -932,7 +932,7 @@ export const useTaskBoardController = ({
       setGatewayTasksError(
         error instanceof Error
           ? error.message
-          : "Failed to load tasks from OpenClaw.",
+          : "Failed to load tasks from Hermes.",
       );
     } finally {
       setGatewayTasksLoading(false);
@@ -1161,7 +1161,7 @@ export const useTaskBoardController = ({
     // effect re-runs → "Maximum update depth exceeded" in dev mode.
     const snapshot = JSON.stringify(
       stateRef.current.cards
-        .filter((card) => !card.isArchived && card.source === "openclaw_event")
+        .filter((card) => !card.isArchived && card.source === "hermes_event")
         .map((card) => ({
           id: card.id,
           title: card.title,
@@ -1173,7 +1173,7 @@ export const useTaskBoardController = ({
     lastDedupeSnapshotRef.current = snapshot;
     const grouped = new Map<string, TaskBoardCard[]>();
     for (const card of stateRef.current.cards) {
-      if (card.isArchived || card.source !== "openclaw_event") continue;
+      if (card.isArchived || card.source !== "hermes_event") continue;
       const titleKey = normalizeTaskRequestText(card.title).toLowerCase();
       if (!titleKey) continue;
       const groupKey = `${card.assignedAgentId ?? "-"}:${card.externalThreadId ?? "-"}:${titleKey}`;
@@ -1266,7 +1266,7 @@ export const useTaskBoardController = ({
         const candidate = candidates[0];
 
         if (!candidate && phase === "start") {
-          // OpenClaw started an agent run -- trust that as the classification signal.
+          // Hermes started an agent run -- trust that as the classification signal.
           const agent = agents.find((a) => a.agentId === agentId);
           const userText = normalizeTaskRequestText(
             agent?.lastUserMessage?.trim() ?? "",
@@ -1279,7 +1279,7 @@ export const useTaskBoardController = ({
               title: truncateTitle(userText, "Incoming request"),
               description: userText,
               status: "in_progress",
-              source: "openclaw_event",
+              source: "hermes_event",
               sourceEventId: cardId,
               assignedAgentId: agentId,
               createdAt: nowIso,

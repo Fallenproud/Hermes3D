@@ -20,7 +20,7 @@ const mockedConsoleError = vi.spyOn(console, "error").mockImplementation(() => {
 
 const writeStudioSettings = (gatewayUrl: string) => {
   const stateDir = fs.mkdtempSync(path.join(os.tmpdir(), "studio-state-"));
-  process.env.OPENCLAW_STATE_DIR = stateDir;
+  process.env.HERMES_STATE_DIR = stateDir;
 
   const settingsDir = path.join(stateDir, "hermes3d");
   fs.mkdirSync(settingsDir, { recursive: true });
@@ -42,9 +42,9 @@ const writeStudioSettings = (gatewayUrl: string) => {
 describe("agent state route", () => {
   beforeEach(() => {
     process.env = { ...ORIGINAL_ENV };
-    delete process.env.OPENCLAW_GATEWAY_SSH_TARGET;
-    delete process.env.OPENCLAW_GATEWAY_SSH_USER;
-    delete process.env.OPENCLAW_STATE_DIR;
+    delete process.env.HERMES_GATEWAY_SSH_TARGET;
+    delete process.env.HERMES_GATEWAY_SSH_USER;
+    delete process.env.HERMES_STATE_DIR;
     mockedSpawnSync.mockReset();
     mockedConsoleError.mockClear();
   });
@@ -76,7 +76,7 @@ describe("agent state route", () => {
 
     mockedSpawnSync.mockReturnValueOnce({
       status: 0,
-      stdout: JSON.stringify({ trashDir: "/home/ubuntu/.openclaw/trash/x", moved: [] }),
+      stdout: JSON.stringify({ trashDir: "/home/ubuntu/.hermes/trash/x", moved: [] }),
       stderr: "",
       error: undefined,
     } as never);
@@ -152,11 +152,11 @@ describe("agent state route", () => {
   });
 
   it("uses configured ssh target without studio settings", async () => {
-    process.env.OPENCLAW_GATEWAY_SSH_TARGET = "me@host.test";
+    process.env.HERMES_GATEWAY_SSH_TARGET = "me@host.test";
 
     mockedSpawnSync.mockReturnValueOnce({
       status: 0,
-      stdout: JSON.stringify({ trashDir: "/home/ubuntu/.openclaw/trash/x", moved: [] }),
+      stdout: JSON.stringify({ trashDir: "/home/ubuntu/.hermes/trash/x", moved: [] }),
       stderr: "",
       error: undefined,
     } as never);

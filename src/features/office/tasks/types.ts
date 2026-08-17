@@ -11,7 +11,7 @@ export const TASK_BOARD_STATUSES = [
 export type TaskBoardStatus = (typeof TASK_BOARD_STATUSES)[number];
 
 export const TASK_BOARD_SOURCES = [
-  "openclaw_event",
+  "hermes_event",
   "hermes3d_manual",
   "playbook",
   "fallback_inferred",

@@ -1,13 +1,13 @@
 # Custom Provider Reference
 
-> Reference implementation guide for plugging a non-OpenClaw, non-Hermes runtime into Hermes3D through the upstream-safe `custom` provider seam.
+> Reference implementation guide for plugging a non-Hermes runtime into Hermes3D through the upstream-safe `custom` provider seam.
 
 ## Goal
 
 Show how a custom orchestration stack should plug into Hermes3D without requiring:
 
 - a named built-in provider
-- OpenClaw emulation
+- gateway protocol emulation
 - Hermes adapter semantics
 
 The shape should be:
@@ -309,7 +309,7 @@ Once the V1 provider is stable, add:
 This reference should not require:
 
 - runtime-specific branches throughout Hermes3D core
-- OpenClaw compatibility shims
+- gateway protocol compatibility shims
 - routing logic duplicated in the frontend
 - direct worker orchestration in the browser
 

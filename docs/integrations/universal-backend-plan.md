@@ -1,29 +1,29 @@
 # Universal Backend Plan
 
-> Backend-neutral Hermes3D integration plan for OpenClaw, Hermes, Vera, and other runtimes.
+> Backend-neutral Hermes3D integration plan for Hermes, Vera, and other runtimes.
 
 ## Recommendation
 
-Do not treat PR #70 as the long-term integration architecture.
+Do not treat the gateway WebSocket protocol as the long-term backend abstraction.
 
-It is useful as a short-term compatibility shim and a source of a few good UX changes, but it does not make Hermes3D backend-neutral. It keeps Hermes3D OpenClaw-shaped and makes Hermes imitate OpenClaw.
+The protocol is a good transport and it is what ships today, but on its own it does not make Hermes3D backend-neutral. If every new runtime has to emulate the gateway protocol to be visible in the office, the app stays shaped around one transport instead of around agent semantics.
 
 That matters because:
 
-- Hermes already has real control surfaces: ACP and an OpenAI-compatible API server.
-- Vera already has a real orchestrator/gateway shape.
-- Every future backend would otherwise need to keep emulating the OpenClaw gateway protocol.
+- Hermes has real control surfaces beyond the gateway protocol: ACP and an OpenAI-compatible API server.
+- Vera already has a real orchestrator/gateway shape of its own.
+- Every future backend would otherwise need to keep emulating a protocol that was never designed as a universal contract.
 
 The better path is:
 
-1. Keep OpenClaw support intact.
+1. Keep the current gateway path working and unbroken.
 2. Extract a backend-neutral runtime adapter inside Hermes3D.
 3. Add Hermes and Vera providers against their native surfaces where possible.
-4. Cherry-pick the high-value UI pieces from PR #70 into that new architecture.
+4. Land UI improvements against that new architecture rather than against the transport.
 
-## What To Reuse From PR #70
+## What To Keep
 
-These are worth keeping:
+These are worth keeping regardless of which seam wins:
 
 - Multi-agent UX concepts.
 - `read_agent_context` as a coordination primitive.
@@ -34,7 +34,7 @@ These are worth keeping:
 
 These are not the right long-term seam:
 
-- A full OpenClaw-protocol emulator as the primary Hermes integration.
+- A protocol emulator as the primary integration path for every new backend.
 - Fake-success implementations for `config.*` and approvals.
 - Synthesizing runtime freshness from `Date.now()` instead of real event/message timestamps.
 
@@ -47,12 +47,12 @@ Instead, Studio should expose a backend-neutral runtime service with provider ad
 ```text
 Browser UI
   -> Studio runtime API
-    -> OpenClaw provider
     -> Hermes provider
     -> Vera provider
+    -> Custom provider
 ```
 
-The browser can still use WebSocket streaming from Studio, but the messages should be Hermes3D-native runtime events rather than implicitly OpenClaw events.
+The browser can still use WebSocket streaming from Studio, but the messages should be Hermes3D-native runtime events rather than implicitly transport-shaped events.
 
 ## Core Adapter Contract
 
@@ -103,18 +103,18 @@ Optional features such as config editing, approvals, files, skills, and cron sho
 
 Initial expected support:
 
-| Capability | OpenClaw | Hermes | Vera |
+| Capability | Hermes | Demo | Vera |
 |---|---|---|---|
 | Agents | Native | Native | Provider-defined |
 | Sessions | Native | Native | Provider-defined |
 | Chat send/abort/wait | Native | Native | Native via orchestrator |
 | Streaming | Native | Native | Native |
-| Agent roles | Native-ish | Native | Native |
-| Files | Native | Partial | Optional |
-| Skills | Native | Native | Optional |
-| Cron | Native | Native | Optional |
-| Approvals | Native | Partial | Optional |
-| Config mutation | Native | Limited | Limited |
+| Agent roles | Native | Static | Native |
+| Files | Partial | None | Optional |
+| Skills | Native | None | Optional |
+| Cron | Native | None | Optional |
+| Approvals | Partial | Stubbed | Optional |
+| Config mutation | Limited | Stubbed | Limited |
 
 Important rule:
 
@@ -122,25 +122,19 @@ If a provider does not support a surface, Hermes3D should disable or hide the UI
 
 ## Provider Strategy
 
-### OpenClaw Provider
-
-Use the existing gateway client as the first provider implementation.
-
-This keeps current behavior working while the rest of the app migrates to the adapter contract.
-
 ### Hermes Provider
 
 Preferred order:
 
 1. ACP for session-aware agent orchestration.
 2. Hermes API server for OpenAI-compatible chat and streaming.
-3. OpenClaw-protocol shim only as a temporary bridge.
+3. The bundled gateway adapter as the compatibility bridge that ships today.
 
 Rationale:
 
 - ACP is a better semantic fit for sessions, cancellation, fork/resume, approvals, and editor-style state.
 - The Hermes API server is already stable and useful for chat, tool calling, and cron-backed service behavior.
-- The OpenClaw shim should be treated as transitional compatibility, not the permanent contract.
+- The gateway adapter should be treated as the working default, not as the permanent contract.
 
 ### Vera Provider
 
@@ -155,11 +149,11 @@ Use:
 - `GET /state`
 - `GET /registry`
 
-The Vera provider should map Hermes3D agent identities to routed roles or lanes rather than pretending Vera is an OpenClaw gateway.
+The Vera provider should map Hermes3D agent identities to routed roles or lanes rather than pretending Vera is a gateway.
 
 ## Event Model
 
-Current Hermes3D expects OpenClaw-flavored `chat`, `agent`, and `presence` events.
+Current Hermes3D expects gateway-flavored `chat`, `agent`, and `presence` events.
 
 That is too narrow for universal providers. Studio should normalize provider-native updates into a Hermes3D event model with explicit semantics:
 
@@ -182,13 +176,13 @@ Recommended implementation order:
 Scope:
 
 - Introduce the provider interface.
-- Wrap current OpenClaw behavior in an `openclaw` provider.
+- Wrap current gateway behavior in a `hermes` provider.
 - Move capability checks into the UI state layer.
 - Add a Studio-level runtime event normalization layer.
 
 This is the most important PR.
 
-### PR 2: Safe UX Cherry-Picks From PR #70
+### PR 2: Safe UX Cherry-Picks
 
 Scope:
 
@@ -196,18 +190,18 @@ Scope:
 - Click-to-chat.
 - Streaming speech bubbles.
 
-These are good product improvements and do not require committing to the Hermes shim architecture.
+These are good product improvements and do not require committing to any one transport.
 
 ### PR 3: Hermes Native Provider
 
 Scope:
 
-- Add a `hermes` provider using ACP where possible.
-- Use Hermes API server for chat/streaming surfaces.
+- Extend the `hermes` provider to use ACP where possible.
+- Use the Hermes API server for chat/streaming surfaces.
 - Expose capabilities honestly.
 - Persist and surface real timestamps from Hermes session/message state.
 
-Keep the shim optional for compatibility, not required.
+Keep the adapter path optional for compatibility, not required.
 
 ### PR 4: Vera Provider
 
@@ -221,25 +215,12 @@ Scope:
 
 Scope:
 
-- Retire or reduce the Hermes OpenClaw shim.
-- Convert shim-only routes into provider-native routes where possible.
-
-## Near-Term Guidance For Luke
-
-If Luke wants "drop-in Hermes support right now", PR #70 is directionally useful.
-
-If Luke wants "Hermes3D should support any backend cleanly", PR #70 should not be the mainline architecture.
-
-Best compromise:
-
-- Do not merge PR #70 as the final backend architecture.
-- Split out the UI improvements and any safe Hermes-specific pieces.
-- Open a new architecture PR for the runtime provider seam.
-- Rebase Hermes integration on top of that seam.
+- Reduce how much of the app depends on protocol-shaped frames.
+- Convert adapter-only routes into provider-native routes where possible.
 
 ## Why This Also Helps Vera
 
-This path avoids making Vera imitate OpenClaw.
+This path avoids making Vera imitate a transport it does not speak.
 
 Instead, Vera can appear as:
 
@@ -247,18 +228,15 @@ Instead, Vera can appear as:
 - with Hermes3D visualizing agents, runs, status, and streamed text,
 - while preserving Vera-specific routing, lane, and model identity.
 
-That gives Hermes3D a broader identity:
-
-- similar to the OpenClaw ecosystem,
-- but not subordinate to OpenClaw's protocol and assumptions.
+That gives Hermes3D a broader identity: a 3D frontend for agent systems generally, not a viewer bound to one backend's protocol assumptions.
 
 ## Proposed First Deliverable
 
-The first concrete deliverable should be a new PR that does only this:
+The first concrete deliverable should be a change that does only this:
 
 - add the provider interface,
-- wrap existing OpenClaw integration behind it,
+- wrap the existing gateway integration behind it,
 - add capability flags,
 - make the UI stop assuming config/approval/file support from every backend.
 
-That PR creates the seam both Hermes and Vera need.
+That creates the seam both Hermes and Vera need.

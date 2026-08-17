@@ -6,7 +6,7 @@ import {
   normalizeVoiceMimeType,
   sanitizeVoiceFileName,
   shouldIgnoreVoiceTranscription,
-} from "@/lib/openclaw/voiceTranscription";
+} from "@/lib/voice/transcription";
 
 describe("voiceTranscription", () => {
   it("normalizes supported audio mime types", () => {

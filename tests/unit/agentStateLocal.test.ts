@@ -9,16 +9,16 @@ import { restoreAgentStateLocally, trashAgentStateLocally } from "@/lib/agent-st
 const mkTmpStateDir = () => fs.mkdtempSync(path.join(os.tmpdir(), "hermes3d-test-"));
 
 describe("agent state local", () => {
-  const originalStateDir = process.env.OPENCLAW_STATE_DIR;
+  const originalStateDir = process.env.HERMES_STATE_DIR;
 
   afterEach(() => {
-    if (originalStateDir === undefined) delete process.env.OPENCLAW_STATE_DIR;
-    else process.env.OPENCLAW_STATE_DIR = originalStateDir;
+    if (originalStateDir === undefined) delete process.env.HERMES_STATE_DIR;
+    else process.env.HERMES_STATE_DIR = originalStateDir;
   });
 
   it("trashes and restores agent workspace + state", () => {
     const stateDir = mkTmpStateDir();
-    process.env.OPENCLAW_STATE_DIR = stateDir;
+    process.env.HERMES_STATE_DIR = stateDir;
 
     const agentId = "test-agent";
     const workspace = path.join(stateDir, `workspace-${agentId}`);
@@ -42,7 +42,7 @@ describe("agent state local", () => {
 
   it("rejects restore paths outside the agent-state trash root", () => {
     const stateDir = mkTmpStateDir();
-    process.env.OPENCLAW_STATE_DIR = stateDir;
+    process.env.HERMES_STATE_DIR = stateDir;
 
     const agentId = "test-agent";
     const fakeTrashDir = path.join(stateDir, "agents", agentId);

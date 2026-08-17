@@ -5,7 +5,7 @@ import {
   buildDoctorJsonReport,
   buildGatewayFailureActions,
   buildGatewayWarnings,
-  buildOpenClawWarnings,
+  buildRemoteGatewayWarnings,
   buildProfileWarnings,
   classifyGatewayFailure,
   DOCTOR_STATUSES,
@@ -16,7 +16,6 @@ import {
   shouldRunCustomChecks,
   shouldRunDemoChecks,
   shouldRunHermesChecks,
-  shouldRunOpenClawChecks,
   summarizeChecks,
 } from "../../scripts/lib/hermes3doctor-core.mjs";
 
@@ -30,14 +29,14 @@ describe("hermes3doctor core", () => {
           token: "",
           profiles: {
             hermes: { url: "ws://localhost:18790", token: "" },
-            openclaw: { url: "ws://localhost:18789", token: "file-token" },
+            demo: { url: "ws://localhost:18789", token: "file-token" },
           },
         },
       },
       upstreamGateway: {
         url: "ws://localhost:18789",
         token: "file-token",
-        adapterType: "openclaw",
+        adapterType: "hermes",
       },
       env: process.env,
     });
@@ -51,7 +50,7 @@ describe("hermes3doctor core", () => {
       string,
       { url: string; token: string }
     >;
-    expect(profiles.openclaw?.url).toBe("ws://localhost:18789");
+    expect(profiles.demo?.url).toBe("ws://localhost:18789");
   });
 
   it("warns on insecure remote websocket and public studio without access token", () => {
@@ -109,9 +108,9 @@ describe("hermes3doctor core", () => {
     });
   });
 
-  it("warns about remote openclaw tunnel setups without a token", () => {
+  it("warns about remote gateway tunnel setups without a token", () => {
     expect(
-      buildOpenClawWarnings({
+      buildRemoteGatewayWarnings({
         gatewayUrl: "wss://demo.tailnet.ts.net/gateway",
         tokenConfigured: false,
       }),
@@ -142,8 +141,8 @@ describe("hermes3doctor core", () => {
       buildProfileWarnings({
         runtimeContext: {
           profiles: {
-            openclaw: { url: "ws://localhost:18789", token: "a" },
-            hermes: { url: "ws://localhost:18789", token: "" },
+            hermes: { url: "ws://localhost:18789", token: "a" },
+            local: { url: "ws://localhost:18789", token: "" },
             demo: { url: "ws://localhost:28789", token: "" },
           },
         },
@@ -156,14 +155,14 @@ describe("hermes3doctor core", () => {
   it("builds remediation actions from tunnel and pairing style failures", () => {
     expect(
       buildGatewayFailureActions({
-        adapterType: "openclaw",
+        adapterType: "hermes",
         message:
           "Unexpected HTTP 401 during WebSocket upgrade. pairing required 1008",
         gatewayUrl: "wss://demo.tailnet.ts.net/gateway",
       }),
     ).toEqual(
       expect.arrayContaining([
-        expect.stringContaining("openclaw devices list"),
+        expect.stringContaining("pending device/browser approval"),
         expect.stringContaining("direct local or LAN access"),
         expect.stringContaining("Tailnet-hosted"),
       ]),
@@ -173,7 +172,7 @@ describe("hermes3doctor core", () => {
   it("treats only real ts.net suffixes as tailnet hosts", () => {
     expect(
       buildGatewayFailureActions({
-        adapterType: "openclaw",
+        adapterType: "hermes",
         message: "Unexpected HTTP 401 during WebSocket upgrade",
         gatewayUrl: "wss://demo.tailnet.ts.net/gateway",
       }),
@@ -185,7 +184,7 @@ describe("hermes3doctor core", () => {
 
     expect(
       buildGatewayFailureActions({
-        adapterType: "openclaw",
+        adapterType: "hermes",
         message: "Unexpected HTTP 401 during WebSocket upgrade",
         gatewayUrl: "wss://evilts.net/gateway",
       }),
@@ -246,12 +245,6 @@ describe("hermes3doctor core", () => {
       }),
     ).toBe(true);
     expect(
-      shouldRunOpenClawChecks({
-        runtimeContext: { adapterType: "demo" },
-        openclawConfigExists: true,
-      }),
-    ).toBe(true);
-    expect(
       shouldRunDemoChecks({
         runtimeContext: { adapterType: "demo" },
         env: process.env,
@@ -278,7 +271,7 @@ describe("hermes3doctor core", () => {
     expect(isCustomRuntimeAdapter("custom")).toBe(true);
     expect(isCustomRuntimeAdapter("local")).toBe(true);
     expect(isCustomRuntimeAdapter("hermes3d")).toBe(true);
-    expect(isCustomRuntimeAdapter("openclaw")).toBe(false);
+    expect(isCustomRuntimeAdapter("hermes")).toBe(false);
   });
 
   it("builds a structured json report", () => {
@@ -292,8 +285,8 @@ describe("hermes3doctor core", () => {
         profiles: {},
       },
       paths: {
-        stateDir: "C:/tmp/.openclaw",
-        settingsPath: "C:/tmp/.openclaw/hermes3d/settings.json",
+        stateDir: "C:/tmp/.hermes",
+        settingsPath: "C:/tmp/.hermes/hermes3d/settings.json",
       },
       checks: [
         {
@@ -324,12 +317,12 @@ describe("hermes3doctor core", () => {
         tokenConfigured: false,
         profiles: {
           hermes: { url: "ws://localhost:18789", token: "" },
-          openclaw: { url: "ws://localhost:28789", token: "secret" },
+          demo: { url: "ws://localhost:28789", token: "secret" },
         },
       },
       paths: {
-        stateDir: "C:/tmp/.openclaw",
-        settingsPath: "C:/tmp/.openclaw/hermes3d/settings.json",
+        stateDir: "C:/tmp/.hermes",
+        settingsPath: "C:/tmp/.hermes/hermes3d/settings.json",
       },
       checks: [
         {
@@ -381,10 +374,10 @@ describe("parseDoctorArgs", () => {
   });
 
   it("combines flags", () => {
-    expect(parseDoctorArgs(["--json", "--profile", "openclaw"])).toEqual({
+    expect(parseDoctorArgs(["--json", "--profile", "hermes"])).toEqual({
       json: true,
       allProfiles: false,
-      profile: "openclaw",
+      profile: "hermes",
     });
   });
 });
@@ -408,8 +401,7 @@ describe("adapterInScope scoping semantics", () => {
 
   it("default (no flags): delegates to defaultBehavior", () => {
     const inScope = makeAdapterInScope({ allProfiles: false, profile: null });
-    expect(inScope("openclaw", true)).toBe(true);
-    expect(inScope("openclaw", false)).toBe(false);
+    expect(inScope("hermes", true)).toBe(true);
     expect(inScope("hermes", false)).toBe(false);
   });
 
@@ -419,24 +411,13 @@ describe("adapterInScope scoping semantics", () => {
       profile: "hermes",
     });
     expect(inScope("hermes", false)).toBe(true);
-    expect(inScope("openclaw", true)).toBe(false); // openclaw would default to true but is suppressed
     expect(inScope("demo", true)).toBe(false);
     expect(inScope("custom", false, ["local", "hermes3d"])).toBe(false);
-  });
-
-  it("--profile openclaw: only openclaw is in scope", () => {
-    const inScope = makeAdapterInScope({
-      allProfiles: false,
-      profile: "openclaw",
-    });
-    expect(inScope("openclaw", false)).toBe(true);
-    expect(inScope("hermes", true)).toBe(false);
   });
 
   it("--all-profiles: every adapter is in scope regardless of default", () => {
     const inScope = makeAdapterInScope({ allProfiles: true, profile: null });
     expect(inScope("hermes", false)).toBe(true);
-    expect(inScope("openclaw", false)).toBe(true);
     expect(inScope("demo", false)).toBe(true);
     expect(inScope("custom", false)).toBe(true);
   });
@@ -447,7 +428,7 @@ describe("adapterInScope scoping semantics", () => {
       profile: "local",
     });
     expect(inScope("custom", false, ["local", "hermes3d"])).toBe(true);
-    expect(inScope("openclaw", true)).toBe(false);
+    expect(inScope("hermes", true)).toBe(false);
   });
 
   it("--profile hermes3d: custom-runtime checks stay in scope", () => {

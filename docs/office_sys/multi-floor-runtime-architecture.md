@@ -27,8 +27,8 @@ Examples:
 
 - `Lobby`
   - onboarding, demo, reception, visitor flow
-- `OpenClaw Floor`
-  - default upstream team
+- `Hermes Ground Floor`
+  - default runtime team
 - `Hermes Floor`
   - supervisor / orchestration team
 - `Custom Floor`
@@ -75,8 +75,8 @@ Floors solve several problems at once:
 
 Instead of "choose one provider", the user can think:
 
-- OpenClaw is downstairs
-- Hermes is on the first floor
+- the main Hermes team is downstairs
+- the supervisor team is on the first floor
 - Custom is upstairs
 - Demo starts in the lobby
 
@@ -135,8 +135,8 @@ Each floor has exactly one runtime binding at a time.
 
 Examples:
 
-- `openclaw-ground`
-  - provider: `openclaw`
+- `hermes-ground`
+  - provider: `hermes`
 - `hermes-first`
   - provider: `hermes`
 - `custom-second`
@@ -184,7 +184,7 @@ Local Hermes3D state should own:
 - floor-local presentation preferences
 - building-level Office Systems state
 
-This follows the existing architecture boundary in [ARCHITECTURE.md](/c:/Users/G/Desktop/Builds/sigilnet/isolation/Hermes3D/ARCHITECTURE.md): Hermes3D should not become the system of record for runtime agent state.
+This follows the existing architecture boundary in [ARCHITECTURE.md](../../ARCHITECTURE.md): Hermes3D should not become the system of record for runtime agent state.
 
 ## Floor Registry
 
@@ -202,11 +202,11 @@ Required fields:
 Suggested shape:
 
 ```ts
-type FloorProvider = "openclaw" | "hermes" | "custom" | "demo";
+type FloorProvider = "hermes" | "custom" | "demo";
 
 type FloorId =
   | "lobby"
-  | "openclaw-ground"
+  | "hermes-ground"
   | "hermes-first"
   | "custom-second"
   | "training"
@@ -445,9 +445,9 @@ Possible progression model:
 - first login
   - lobby only
 - after first runtime setup
-  - OpenClaw floor
+  - Hermes ground floor
 - after multi-runtime setup
-  - Hermes floor
+  - additional runtime floors
 - after usage thresholds
   - Training floor
 - later milestones
@@ -550,7 +550,7 @@ Acceptance criteria:
 
 - cross-floor actions are visible building events
 - routing is explicit, not inferred from hidden runtime config
-- Hermes supervising OpenClaw can be modeled as a building behavior
+- one floor's supervisor agents coordinating another floor's team can be modeled as a building behavior
 
 ### Phase 6: Office Systems on Top
 
@@ -576,7 +576,7 @@ Acceptance criteria:
 - create a canonical floor registry module
 - include at least:
   - `lobby`
-  - `openclaw-ground`
+  - `hermes-ground`
   - `hermes-first`
   - `custom-second`
   - `training`

@@ -61,7 +61,7 @@ describe("StudioSettingsCoordinator", () => {
           lastKnownGood: {
             url: "ws://localhost:18789",
             token: undefined,
-            adapterType: "openclaw",
+            adapterType: "hermes",
           },
         },
       },
@@ -99,7 +99,7 @@ describe("StudioSettingsCoordinator", () => {
         lastKnownGood: {
           url: "ws://localhost:18789",
           token: undefined,
-          adapterType: "openclaw",
+          adapterType: "hermes",
         },
       },
     });
@@ -134,7 +134,7 @@ describe("StudioSettingsCoordinator", () => {
           },
         },
         lastKnownGood: {
-          adapterType: "openclaw",
+          adapterType: "hermes",
         },
       },
     });
@@ -153,7 +153,7 @@ describe("StudioSettingsCoordinator", () => {
         lastKnownGood: {
           url: "ws://localhost:18789",
           token: "stored-token",
-          adapterType: "openclaw",
+          adapterType: "hermes",
         },
       },
     });

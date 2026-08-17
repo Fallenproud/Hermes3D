@@ -1,7 +1,5 @@
 import { NextResponse } from "next/server";
 
-import { transcribeVoiceWithOpenClaw } from "@/lib/openclaw/voiceTranscription";
-
 export const runtime = "nodejs";
 
 export const MAX_VOICE_UPLOAD_BYTES = 20 * 1024 * 1024;
@@ -71,19 +69,15 @@ export async function POST(request: Request) {
       );
     }
 
-    const result = await transcribeVoiceWithOpenClaw({
-      buffer: Buffer.from(arrayBuffer),
-      fileName: audioFile.name,
-      mimeType: audioFile.type,
-    });
-
-    return NextResponse.json({
-      transcript: result.transcript,
-      provider: result.provider,
-      model: result.model,
-      decision: result.decision,
-      ignored: result.ignored,
-    });
+    // Hermes3D does not bundle a speech-to-text provider. The upload is validated
+    // here so callers get a useful error, but transcription itself is unimplemented.
+    return NextResponse.json(
+      {
+        error:
+          "Voice transcription is not configured. Connect an external transcription provider to enable voice notes.",
+      },
+      { status: 501 },
+    );
   } catch (error) {
     const message = error instanceof Error ? error.message : "Failed to transcribe audio.";
     return NextResponse.json({ error: message }, { status: 500 });

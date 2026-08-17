@@ -1,4 +1,4 @@
-# Hermes3D - 3D agent visualization for OpenClaw.
+# Hermes3D - 3D agent visualization for Hermes.
 # Multi-stage build: install prod deps -> build Next.js -> run with custom server.
 
 FROM node:20-slim AS deps

@@ -19,7 +19,7 @@ const toMediaUrl = (path: string): string => {
 
 /**
  * Rewrites tool-style media lines like:
- *   MEDIA: /home/ubuntu/.openclaw/workspace-agent/foo.png
+ *   MEDIA: /home/ubuntu/.hermes/workspace-agent/foo.png
  * into markdown image links so the chat UI can render them inline.
  *
  * - Skips replacements inside fenced code blocks.

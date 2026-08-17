@@ -13,8 +13,8 @@ import { loadStudioSettings } from "@/lib/studio/settings-store";
 export const runtime = "nodejs";
 
 const REMOVABLE_SOURCES = new Set<RemovableSkillSource>([
-  "openclaw-managed",
-  "openclaw-workspace",
+  "hermes-managed",
+  "hermes-workspace",
 ]);
 
 const normalizeRequired = (value: unknown, field: string): string => {
@@ -79,7 +79,7 @@ export async function POST(request: Request) {
       message.includes("Remote workspace skill removal is not supported over SSH") ||
       message.includes("Gateway URL is missing") ||
       message.includes("Invalid gateway URL") ||
-      message.includes("require OPENCLAW_GATEWAY_SSH_TARGET")
+      message.includes("require HERMES_GATEWAY_SSH_TARGET")
         ? 400
         : 500;
     if (status >= 500) {

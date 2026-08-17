@@ -1,7 +1,7 @@
 import fs from "node:fs";
 import path from "node:path";
 
-import { resolveStateDir } from "@/lib/clawdbot/paths";
+import { resolveStateDir } from "@/lib/hermes/paths";
 import {
   defaultStudioSettings,
   mergeStudioSettings,
@@ -18,7 +18,7 @@ import {
 // storage and document any changes to this threat model in README.md and SECURITY.md.
 const SETTINGS_DIRNAME = "hermes3d";
 const SETTINGS_FILENAME = "settings.json";
-const OPENCLAW_CONFIG_FILENAME = "openclaw.json";
+const HERMES_CONFIG_FILENAME = "hermes.json";
 const DEFAULT_LOCAL_GATEWAY_PORT = 18789;
 
 export const resolveStudioSettingsPath = () =>
@@ -41,9 +41,9 @@ const buildGatewaySettings = (params: {
 
 const buildLocalProfile = (url: string, token = ""): StudioGatewayProfile => ({ url, token });
 
-const readOpenclawGatewayDefaults = (): StudioGatewaySettings | null => {
+const readHermesGatewayDefaults = (): StudioGatewaySettings | null => {
   try {
-    const configPath = path.join(resolveStateDir(), OPENCLAW_CONFIG_FILENAME);
+    const configPath = path.join(resolveStateDir(), HERMES_CONFIG_FILENAME);
     if (!fs.existsSync(configPath)) return null;
     const raw = fs.readFileSync(configPath, "utf8");
     const parsed = JSON.parse(raw) as unknown;
@@ -57,11 +57,11 @@ const readOpenclawGatewayDefaults = (): StudioGatewaySettings | null => {
     const url = port ? `ws://localhost:${port}` : `ws://localhost:${DEFAULT_LOCAL_GATEWAY_PORT}`;
     if (!url) return null;
     return buildGatewaySettings({
-      adapterType: "openclaw",
+      adapterType: "hermes",
       url,
       token,
       profiles: {
-        openclaw: buildLocalProfile(url, token),
+        hermes: buildLocalProfile(url, token),
       },
     });
   } catch {
@@ -72,7 +72,6 @@ const readOpenclawGatewayDefaults = (): StudioGatewaySettings | null => {
 const normalizeAdapterType = (value: string | undefined): StudioGatewayAdapterType | null => {
   const normalized = value?.trim().toLowerCase();
   if (
-    normalized === "openclaw" ||
     normalized === "hermes" ||
     normalized === "demo" ||
     normalized === "local" ||
@@ -99,7 +98,7 @@ const buildEnvGatewayDefaults = (): StudioGatewaySettings | null => {
   const envUrl = process.env.HERMES3D_GATEWAY_URL?.trim();
   const envToken = process.env.HERMES3D_GATEWAY_TOKEN?.trim() ?? "";
   const envAdapterType =
-    normalizeAdapterType(process.env.HERMES3D_GATEWAY_ADAPTER_TYPE) ?? "openclaw";
+    normalizeAdapterType(process.env.HERMES3D_GATEWAY_ADAPTER_TYPE) ?? "hermes";
 
   const hermesProfile = readPortBasedGatewayProfile("hermes", "HERMES_ADAPTER_PORT");
   const demoProfile = readPortBasedGatewayProfile("demo", "DEMO_ADAPTER_PORT");
@@ -154,7 +153,7 @@ const mergeGatewayProfiles = (
 };
 
 export const loadLocalGatewayDefaults = (): StudioGatewaySettings | null => {
-  const fromFile = readOpenclawGatewayDefaults();
+  const fromFile = readHermesGatewayDefaults();
   const fromEnv = buildEnvGatewayDefaults();
   if (fromEnv) {
     return mergeGatewayProfiles(fromEnv, fromFile);

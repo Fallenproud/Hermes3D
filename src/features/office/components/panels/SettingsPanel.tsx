@@ -20,13 +20,13 @@ type SettingsPanelProps = {
   officeTitleLoaded: boolean;
   onOfficeTitleChange: (title: string) => void;
   remoteOfficeEnabled: boolean;
-  remoteOfficeSourceKind: "presence_endpoint" | "openclaw_gateway";
+  remoteOfficeSourceKind: "presence_endpoint" | "hermes_gateway";
   remoteOfficeLabel: string;
   remoteOfficePresenceUrl: string;
   remoteOfficeGatewayUrl: string;
   remoteOfficeTokenConfigured: boolean;
   onRemoteOfficeEnabledChange: (enabled: boolean) => void;
-  onRemoteOfficeSourceKindChange: (kind: "presence_endpoint" | "openclaw_gateway") => void;
+  onRemoteOfficeSourceKindChange: (kind: "presence_endpoint" | "hermes_gateway") => void;
   onRemoteOfficeLabelChange: (label: string) => void;
   onRemoteOfficePresenceUrlChange: (url: string) => void;
   onRemoteOfficeGatewayUrlChange: (url: string) => void;
@@ -45,8 +45,8 @@ export function SettingsPanel({
   gatewayStatus,
   gatewayUrl,
   gatewayToken,
-  selectedAdapterType = "openclaw",
-  activeAdapterType = "openclaw",
+  selectedAdapterType = "hermes",
+  activeAdapterType = "hermes",
   onGatewayDisconnect,
   onGatewayConnect,
   onGatewayUrlChange,
@@ -140,7 +140,6 @@ export function SettingsPanel({
               ["local", "Local"],
               ["hermes3d", "Hermes3D"],
               ["custom", "Custom"],
-              ["openclaw", "OpenClaw"],
             ] as const
           ).map(([adapterType, label]) => {
             const selected = selectedAdapterType === adapterType;
@@ -231,7 +230,7 @@ export function SettingsPanel({
           <div>
             <div className="text-[11px] font-medium text-white">Remote office</div>
             <div className="mt-1 text-[10px] text-white/75">
-              Attach a second read-only office from either another Hermes3D or a remote OpenClaw gateway.
+              Attach a second read-only office from either another Hermes3D or a remote Hermes gateway.
             </div>
           </div>
           <span className="font-mono text-[10px] uppercase tracking-[0.14em] text-cyan-200/70">
@@ -270,16 +269,16 @@ export function SettingsPanel({
               value={remoteOfficeSourceKind}
               onChange={(event) =>
                 onRemoteOfficeSourceKindChange(
-                  event.target.value as "presence_endpoint" | "openclaw_gateway"
+                  event.target.value as "presence_endpoint" | "hermes_gateway"
                 )
               }
               className="w-full rounded-md border border-cyan-500/10 bg-black/25 px-3 py-2 text-[11px] text-cyan-100 outline-none transition-colors focus:border-cyan-400/30"
             >
               <option value="presence_endpoint">Remote Hermes3D presence endpoint</option>
-              <option value="openclaw_gateway">Remote OpenClaw gateway</option>
+              <option value="hermes_gateway">Remote Hermes gateway</option>
             </select>
             <div className="mt-1 text-[10px] text-white/50">
-              Use a presence endpoint when the other machine runs Hermes3D. Use gateway mode when the other machine only runs OpenClaw.
+              Use a presence endpoint when the other machine runs Hermes3D. Use gateway mode when the other machine only runs Hermes.
             </div>
           </div>
           <div>
@@ -363,7 +362,7 @@ export function SettingsPanel({
                   className="w-full rounded-md border border-cyan-500/10 bg-black/25 px-3 py-2 text-[11px] text-cyan-100 outline-none transition-colors placeholder:text-cyan-100/30 focus:border-cyan-400/30"
                 />
                 <div className="mt-1 text-[10px] text-white/50">
-                  Hermes3D connects from the browser directly to the remote OpenClaw gateway and derives a read-only presence snapshot.
+                  Hermes3D connects from the browser directly to the remote Hermes gateway and derives a read-only presence snapshot.
                 </div>
               </div>
               <div>

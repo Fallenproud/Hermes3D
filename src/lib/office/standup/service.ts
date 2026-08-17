@@ -18,14 +18,14 @@ import type {
   StandupTicketSummary,
   StandupTriggerKind,
 } from "@/lib/office/standup/types";
-import { resolveStateDir } from "@/lib/clawdbot/paths";
+import { resolveStateDir } from "@/lib/hermes/paths";
 
 type JiraIssueRecord = StandupTicketSummary & {
   assigneeName: string | null;
   assigneeEmail: string | null;
 };
 
-const OPENCLAW_CONFIG_FILENAME = "openclaw.json";
+const HERMES_CONFIG_FILENAME = "hermes.json";
 
 const coerceText = (value: string | null | undefined): string => {
   return (value ?? "").replace(/\s+/g, " ").trim();
@@ -248,7 +248,7 @@ const normalizeAgentSnapshots = (agents: StandupAgentSnapshot[]): StandupAgentSn
     }))
     .filter((agent) => agent.agentId);
   if (valid.length > 0) return valid;
-  const configPath = path.join(resolveStateDir(), OPENCLAW_CONFIG_FILENAME);
+  const configPath = path.join(resolveStateDir(), HERMES_CONFIG_FILENAME);
   if (!fs.existsSync(configPath)) return [];
   const raw = fs.readFileSync(configPath, "utf8");
   const parsed = JSON.parse(raw) as unknown;

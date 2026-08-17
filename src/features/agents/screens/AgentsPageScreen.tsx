@@ -126,64 +126,6 @@ type SettingsSidebarItem = SettingsRouteTab;
 
 const RESERVED_MAIN_AGENT_ID = "main";
 
-const isRecord = (value: unknown): value is Record<string, unknown> =>
-  Boolean(value && typeof value === "object" && !Array.isArray(value));
-
-const normalizeControlUiBasePath = (basePath: string): string => {
-  let normalized = basePath.trim();
-  if (!normalized || normalized === "/") return "";
-  if (!normalized.startsWith("/")) {
-    normalized = `/${normalized}`;
-  }
-  if (normalized.endsWith("/")) {
-    normalized = normalized.slice(0, -1);
-  }
-  return normalized;
-};
-
-const resolveControlUiUrl = (params: {
-  gatewayUrl: string;
-  configSnapshot: GatewayModelPolicySnapshot | null;
-}): string | null => {
-  const rawGatewayUrl = params.gatewayUrl.trim();
-  if (!rawGatewayUrl) return null;
-
-  let controlUiEnabled = true;
-  let controlUiBasePath = "";
-
-  const config = params.configSnapshot?.config;
-  if (isRecord(config)) {
-    const configRecord = config as Record<string, unknown>;
-    const gateway = isRecord(configRecord["gateway"])
-      ? (configRecord["gateway"] as Record<string, unknown>)
-      : null;
-    const controlUi = gateway && isRecord(gateway.controlUi) ? gateway.controlUi : null;
-    if (controlUi && typeof controlUi.enabled === "boolean") {
-      controlUiEnabled = controlUi.enabled;
-    }
-    if (typeof controlUi?.basePath === "string") {
-      controlUiBasePath = normalizeControlUiBasePath(controlUi.basePath);
-    }
-  }
-
-  if (!controlUiEnabled) return null;
-
-  try {
-    const url = new URL(rawGatewayUrl);
-    if (url.protocol === "ws:") {
-      url.protocol = "http:";
-    } else if (url.protocol === "wss:") {
-      url.protocol = "https:";
-    }
-    url.pathname = controlUiBasePath ? `${controlUiBasePath}/` : "/";
-    url.search = "";
-    url.hash = "";
-    return url.toString();
-  } catch {
-    return null;
-  }
-};
-
 const resolveNextNewAgentName = (agents: AgentState[]) => {
   const baseName = "New Agent";
   const existingNames = new Set(
@@ -441,10 +383,6 @@ const AgentsPageScreen = () => {
   );
   const hasRunningAgents = runningAgentCount > 0;
   const isLocalGateway = useMemo(() => isLocalGatewayUrl(gatewayUrl), [gatewayUrl]);
-  const controlUiUrl = useMemo(
-    () => resolveControlUiUrl({ gatewayUrl, configSnapshot: gatewayConfigSnapshot }),
-    [gatewayConfigSnapshot, gatewayUrl]
-  );
   const settingsHeaderModel = (inspectSidebarAgent?.model ?? "").trim() || "Default";
   const settingsHeaderThinkingRaw = (inspectSidebarAgent?.thinkingLevel ?? "").trim() || "low";
   const settingsHeaderThinking =
@@ -1437,7 +1375,6 @@ const AgentsPageScreen = () => {
                 localGatewayDefaults={localGatewayDefaults}
                 status={status}
                 error={gatewayError}
-                showApprovalHint={didAttemptGatewayConnect}
                 onGatewayUrlChange={setGatewayUrl}
                 onTokenChange={setToken}
                 onAdapterTypeChange={setSelectedAdapterType}
@@ -1691,7 +1628,6 @@ const AgentsPageScreen = () => {
                             onDeleteCronJob={(jobId) =>
                               settingsMutationController.handleDeleteCronJob(inspectSidebarAgent.agentId, jobId)
                             }
-                            controlUiUrl={selectedAdapterType === "openclaw" ? controlUiUrl : null}
                             adapterType={selectedAdapterType}
                           />
                         </div>

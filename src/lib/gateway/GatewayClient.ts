@@ -5,7 +5,7 @@ import {
   GatewayBrowserClient,
   clearGatewayBrowserSessionStorage,
   type GatewayHelloOk,
-} from "./openclaw/GatewayBrowserClient";
+} from "./protocol/GatewayBrowserClient";
 import type {
   StudioGatewayProfilePublic,
   StudioGatewayAdapterType,
@@ -24,7 +24,6 @@ import type {
 } from "@/lib/studio/coordinator";
 import { resolveStudioProxyGatewayUrl } from "@/lib/gateway/proxy-url";
 import { ensureGatewayReloadModeHotForLocalStudio } from "@/lib/gateway/gatewayReloadMode";
-import { isLocalGatewayUrl } from "@/lib/gateway/local-gateway";
 import { GatewayResponseError } from "@/lib/gateway/errors";
 
 const gatewayDebugEnabled = process.env.NODE_ENV !== "production";
@@ -121,23 +120,12 @@ const DEFAULT_UPSTREAM_GATEWAY_URL =
   process.env.NEXT_PUBLIC_GATEWAY_URL || "ws://localhost:18789";
 const INITIAL_AUTO_CONNECT_DELAY_MS = 900;
 const INITIAL_CONNECT_RETRY_DELAY_MS = 1_200;
-const OPENCLAW_CONTROL_UI_CLIENT_ID = "openclaw-control-ui";
-const OPENCLAW_WEBCHAT_UI_CLIENT_ID = "webchat-ui";
+const CONTROL_UI_CLIENT_ID = "hermes3d-control-ui";
 
 const isAutoManagedAdapter = (adapterType: StudioGatewayAdapterType) =>
-  adapterType === "openclaw" || adapterType === "hermes" || adapterType === "demo";
+  adapterType === "hermes" || adapterType === "demo";
 
-export const resolveGatewayClientName = (
-  adapterType: StudioGatewayAdapterType,
-  gatewayUrl: string
-) => {
-  if (adapterType !== "openclaw") {
-    return OPENCLAW_CONTROL_UI_CLIENT_ID;
-  }
-  return isLocalGatewayUrl(gatewayUrl)
-    ? OPENCLAW_CONTROL_UI_CLIENT_ID
-    : OPENCLAW_WEBCHAT_UI_CLIENT_ID;
-};
+export const resolveGatewayClientName = () => CONTROL_UI_CLIENT_ID;
 
 export const resolveInitialGatewayAutoConnectDelayMs = (
   adapterType: StudioGatewayAdapterType
@@ -184,12 +172,11 @@ const normalizeLocalGatewayDefaults = (value: unknown): StudioGatewaySettings | 
   const adapterType =
     raw.adapterType === "demo" ||
     raw.adapterType === "hermes" ||
-    raw.adapterType === "openclaw" ||
     raw.adapterType === "local" ||
     raw.adapterType === "hermes3d" ||
     raw.adapterType === "custom"
       ? raw.adapterType
-      : "openclaw";
+      : "hermes";
   const profiles = normalizeGatewayProfilesPublic(raw.profiles);
   return { url, token, adapterType, ...(profiles ? { profiles } : {}) };
 };
@@ -210,7 +197,7 @@ const normalizeGatewayProfilesPublic = (
   if (!value || typeof value !== "object") return undefined;
   const raw = value as Partial<Record<StudioGatewayAdapterType, StudioGatewayProfilePublic>>;
   const profiles: Partial<Record<StudioGatewayAdapterType, { url: string; token: string }>> = {};
-  for (const adapterType of ["openclaw", "hermes", "demo", "local", "hermes3d", "custom"] as const) {
+  for (const adapterType of ["hermes", "demo", "local", "hermes3d", "custom"] as const) {
     const profile = normalizeGatewayProfilePublic(raw[adapterType]);
     if (profile) {
       profiles[adapterType] = profile;
@@ -528,19 +515,19 @@ export const syncGatewaySessionSettings = async ({
 };
 
 const doctorFixHint =
-  "Run `npx openclaw doctor --fix` on the gateway host (or `pnpm openclaw doctor --fix` in a source checkout).";
+  "Run `npx hermes doctor --fix` on the gateway host (or `pnpm hermes doctor --fix` in a source checkout).";
 
 const protocolMismatchHint =
-  "This gateway looks too old for Hermes3D's protocol v3. Upgrade OpenClaw, use the Hermes adapter, or run `npm run demo-gateway` for a no-framework office demo.";
+  "This gateway looks too old for Hermes3D's protocol v3. Upgrade the gateway, run `npm run hermes-adapter`, or run `npm run demo-gateway` for a no-framework office demo.";
 
 const tailscaleGatewayHint =
-  "If this is a remote OpenClaw/Tailscale gateway, confirm the Studio host can reach the `wss://...` address and approve the first device pairing on the gateway host with `openclaw devices approve --latest`.";
+  "If this is a remote Hermes/Tailscale gateway, confirm the Studio host can reach the `wss://...` address and approve the first device pairing on the gateway host with `hermes devices approve --latest`.";
 
 const pairingRequiredHint =
-  "This gateway is asking for first-time device approval. Run `openclaw devices approve --latest` on the gateway host, then restart Hermes3D and reconnect from this browser.";
+  "This gateway is asking for first-time device approval. Run `hermes devices approve --latest` on the gateway host, then restart Hermes3D and reconnect from this browser.";
 
 const requiresDeviceIdentityHint =
-  "This gateway rejected the client as a control UI without device identity. For remote OpenClaw/Tailscale connections, update to the latest Hermes3D build and approve the device pairing on the gateway host.";
+  "This gateway rejected the client as a control UI without device identity. For remote Hermes/Tailscale connections, update to the latest Hermes3D build and approve the device pairing on the gateway host.";
 
 const isGatewayProtocolMismatchError = (error: GatewayResponseError) => {
   if (error.code.trim().toUpperCase() !== "INVALID_REQUEST") return false;
@@ -725,7 +712,7 @@ export const useGatewayConnection = (
   const [gatewayUrl, setGatewayUrl] = useState(DEFAULT_UPSTREAM_GATEWAY_URL);
   const [token, setToken] = useState("");
   const [selectedAdapterType, setSelectedAdapterTypeState] =
-    useState<StudioGatewayAdapterType>("openclaw");
+    useState<StudioGatewayAdapterType>("hermes");
   const [adapterProfiles, setAdapterProfiles] = useState<
     Partial<Record<StudioGatewayAdapterType, { url: string; token: string }>>
   >({});
@@ -797,10 +784,10 @@ export const useGatewayConnection = (
         const nextGatewayUrl = selectedProfile.url ?? "";
         const nextToken = selectedProfile.token ?? "";
         // Patch Hermes Phase 2: allow auto-connect for auto-managed adapters
-        // (hermes/openclaw/demo) when a persisted URL exists, even if
+        // (hermes/hermes/demo) when a persisted URL exists, even if
         // gateway.lastKnownGood.adapterType doesn't match the currently
         // selected adapter. Without this, switching to Hermes never
-        // auto-connects because lastKnownGood is still "openclaw".
+        // auto-connects because lastKnownGood is still "hermes".
         const hasPersistedProfileForSelected =
           Boolean(resolvedGatewayProfiles.lastKnownGoodForSelected?.url) ||
           (isAutoManagedAdapter(nextAdapterType) && nextGatewayUrl.trim().length > 0);
@@ -827,7 +814,7 @@ export const useGatewayConnection = (
             loadedGatewaySettings.current = {
               gatewayUrl: DEFAULT_UPSTREAM_GATEWAY_URL.trim(),
               token: "",
-              adapterType: "openclaw",
+              adapterType: "hermes",
               profiles: undefined,
               hasLastKnownGood: false,
             };
@@ -930,8 +917,8 @@ export const useGatewayConnection = (
             gatewayUrl: resolveStudioProxyGatewayUrl(),
             token,
             authScopeKey: gatewayUrl,
-            clientName: resolveGatewayClientName(selectedAdapterType, gatewayUrl),
-            disableDeviceAuth: selectedAdapterType !== "openclaw",
+            clientName: resolveGatewayClientName(),
+            disableDeviceAuth: selectedAdapterType !== "hermes",
           });
           lastError = null;
           break;
@@ -963,10 +950,9 @@ export const useGatewayConnection = (
       const nextDetectedAdapterType =
         hello?.adapterType === "demo" ||
         hello?.adapterType === "hermes" ||
-        hello?.adapterType === "openclaw" ||
         hello?.adapterType === "custom"
           ? hello.adapterType
-          : "openclaw";
+          : "hermes";
       setDetectedAdapterType(nextDetectedAdapterType);
       setHasLastKnownGoodState(nextDetectedAdapterType === selectedAdapterType);
       // Flush immediately (debounce=0) so lastKnownGood survives a quick refresh.
@@ -1180,7 +1166,7 @@ export const useGatewayConnection = (
     setDetectedAdapterType(null);
     // Always close an active WebSocket connection regardless of selectedAdapterType.
     // selectedAdapterType may already reflect the *target* adapter when this runs
-    // (e.g. switching from openclaw → local sets selectedAdapterType before disconnect
+    // (e.g. switching from hermes → local sets selectedAdapterType before disconnect
     // is called), so we guard on actual connection state instead.
     if (status === "connected" || status === "connecting") {
       client.disconnect();
@@ -1215,7 +1201,7 @@ export const useGatewayConnection = (
       selectedAdapterType === "hermes3d" ||
       !hasLastKnownGoodState ||
       !(gatewayUrl ?? "").trim() ||
-      (selectedAdapterType === "openclaw" && !(token ?? "").trim()) ||
+      (selectedAdapterType === "hermes" && !(token ?? "").trim()) ||
       wasManualDisconnectRef.current ||
       Boolean(error));
 

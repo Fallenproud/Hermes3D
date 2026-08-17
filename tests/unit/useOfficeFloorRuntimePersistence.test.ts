@@ -40,8 +40,8 @@ describe("useOfficeFloorRuntimePersistence", () => {
       (props) => useOfficeFloorRuntimePersistence(props),
       {
         initialProps: {
-          activeFloorId: "openclaw-ground" as FloorId,
-          gatewayUrl: "ws://openclaw:18789",
+          activeFloorId: "hermes-first" as FloorId,
+          gatewayUrl: "ws://hermes:18789",
           status: "connecting" as GatewayStatus,
           gatewayError: null,
           settingsCoordinator: coordinator,
@@ -54,7 +54,7 @@ describe("useOfficeFloorRuntimePersistence", () => {
     expect(updateSettings).toHaveBeenCalledWith(
       expect.objectContaining({
         officeFloors: expect.objectContaining({
-          "openclaw-ground": expect.objectContaining({ status: "connecting" }),
+          "hermes-first": expect.objectContaining({ status: "connecting" }),
         }),
       }),
     );
@@ -69,8 +69,8 @@ describe("useOfficeFloorRuntimePersistence", () => {
       (props) => useOfficeFloorRuntimePersistence(props),
       {
         initialProps: {
-          activeFloorId: "openclaw-ground" as FloorId,
-          gatewayUrl: "ws://openclaw:18789",
+          activeFloorId: "hermes-first" as FloorId,
+          gatewayUrl: "ws://hermes:18789",
           status: "connected" as GatewayStatus,
           gatewayError: null,
           settingsCoordinator: coordinator,
@@ -81,10 +81,10 @@ describe("useOfficeFloorRuntimePersistence", () => {
     await act(() => vi.runAllTimersAsync());
     updateSettings.mockClear();
 
-    // User navigates to Hermes floor — gatewayUrl and status have NOT changed.
+    // User navigates to the local runtime floor — gatewayUrl and status have NOT changed.
     rerender({
-      activeFloorId: "hermes-first" as const,
-      gatewayUrl: "ws://openclaw:18789",
+      activeFloorId: "local-runtime" as const,
+      gatewayUrl: "ws://hermes:18789",
       status: "connected" as const,
       gatewayError: null,
       settingsCoordinator: coordinator,
@@ -103,8 +103,8 @@ describe("useOfficeFloorRuntimePersistence", () => {
       (props) => useOfficeFloorRuntimePersistence(props),
       {
         initialProps: {
-          activeFloorId: "openclaw-ground" as FloorId,
-          gatewayUrl: "ws://openclaw:18789",
+          activeFloorId: "hermes-first" as FloorId,
+          gatewayUrl: "ws://hermes:18789",
           status: "connected" as GatewayStatus,
           gatewayError: null,
           settingsCoordinator: coordinator,
@@ -115,9 +115,9 @@ describe("useOfficeFloorRuntimePersistence", () => {
     await act(() => vi.runAllTimersAsync());
     updateSettings.mockClear();
 
-    // User switches to Hermes floor and then connects to the Hermes gateway.
+    // User switches to the local runtime floor and connects to a different gateway.
     rerender({
-      activeFloorId: "hermes-first" as const,
+      activeFloorId: "local-runtime" as const,
       gatewayUrl: "ws://hermes:7770",
       status: "connecting" as const,
       gatewayError: null,
@@ -126,19 +126,19 @@ describe("useOfficeFloorRuntimePersistence", () => {
 
     await act(() => vi.runAllTimersAsync());
 
-    // The patch should target hermes-first, not openclaw-ground.
+    // The patch should target local-runtime, not hermes-first.
     expect(updateSettings).toHaveBeenCalledTimes(1);
     expect(updateSettings).toHaveBeenCalledWith(
       expect.objectContaining({
         officeFloors: expect.objectContaining({
-          "hermes-first": expect.objectContaining({ status: "connecting" }),
+          "local-runtime": expect.objectContaining({ status: "connecting" }),
         }),
       }),
     );
     expect(updateSettings).not.toHaveBeenCalledWith(
       expect.objectContaining({
         officeFloors: expect.objectContaining({
-          "openclaw-ground": expect.anything(),
+          "hermes-first": expect.anything(),
         }),
       }),
     );
@@ -151,8 +151,8 @@ describe("useOfficeFloorRuntimePersistence", () => {
       (props) => useOfficeFloorRuntimePersistence(props),
       {
         initialProps: {
-          activeFloorId: "openclaw-ground" as FloorId,
-          gatewayUrl: "ws://openclaw:18789",
+          activeFloorId: "hermes-first" as FloorId,
+          gatewayUrl: "ws://hermes:18789",
           status: "connecting" as GatewayStatus,
           gatewayError: null,
           settingsCoordinator: coordinator,
@@ -165,8 +165,8 @@ describe("useOfficeFloorRuntimePersistence", () => {
 
     // User switches floors while the connection is still in flight.
     rerender({
-      activeFloorId: "hermes-first" as const,
-      gatewayUrl: "ws://openclaw:18789",
+      activeFloorId: "local-runtime" as const,
+      gatewayUrl: "ws://hermes:18789",
       status: "connecting" as const,
       gatewayError: null,
       settingsCoordinator: coordinator,
@@ -174,8 +174,8 @@ describe("useOfficeFloorRuntimePersistence", () => {
 
     // Connection attempt fails — status + error update, but URL is unchanged.
     rerender({
-      activeFloorId: "hermes-first" as const,
-      gatewayUrl: "ws://openclaw:18789",
+      activeFloorId: "local-runtime" as const,
+      gatewayUrl: "ws://hermes:18789",
       status: "disconnected" as const,
       gatewayError: "ECONNREFUSED",
       settingsCoordinator: coordinator,
@@ -183,11 +183,11 @@ describe("useOfficeFloorRuntimePersistence", () => {
 
     await act(() => vi.runAllTimersAsync());
 
-    // Error must be stamped on openclaw-ground (which owns the URL), not hermes-first.
+    // Error must be stamped on hermes-first (which owns the URL), not local-runtime.
     expect(updateSettings).toHaveBeenCalledWith(
       expect.objectContaining({
         officeFloors: expect.objectContaining({
-          "openclaw-ground": expect.objectContaining({
+          "hermes-first": expect.objectContaining({
             status: "error",
             lastErrorMessage: "ECONNREFUSED",
           }),
@@ -197,7 +197,7 @@ describe("useOfficeFloorRuntimePersistence", () => {
     expect(updateSettings).not.toHaveBeenCalledWith(
       expect.objectContaining({
         officeFloors: expect.objectContaining({
-          "hermes-first": expect.anything(),
+          "local-runtime": expect.anything(),
         }),
       }),
     );

@@ -20,12 +20,12 @@ This is a beta feature. It is designed for visibility and lightweight cross-offi
 There are always two roles:
 
 - **Local office**: the Hermes3D instance you are currently using;
-- **Remote office**: another Hermes3D instance or another OpenClaw gateway you want to visualize.
+- **Remote office**: another Hermes3D instance or another gateway you want to visualize.
 
 The remote office can be connected in one of two ways:
 
 1. **Remote Hermes3D presence endpoint**.
-2. **Remote OpenClaw gateway**.
+2. **Remote gateway**.
 
 ## Connection Modes
 
@@ -47,9 +47,9 @@ https://other-office.example.com/api/office/presence
 
 This mode is best when you want the remote side to feel like another full Hermes3D office.
 
-### 2. Remote OpenClaw Gateway
+### 2. Remote Gateway
 
-Use this when the other machine only runs OpenClaw and does not run Hermes3D.
+Use this when the other machine only runs a gateway and does not run Hermes3D.
 
 How it works:
 
@@ -123,7 +123,7 @@ Under the hood, Hermes3D now uses a shared runtime contract for:
 - `agents.message`
 - `agents.handoff`
 
-OpenClaw, Hermes, Demo, and direct custom/local/hermes3d runtime profiles can all target the same message/handoff seam. Provider-native adapters such as Anthropic or Claude Code are still a follow-up slice.
+Hermes, Demo, and direct custom/local/hermes3d runtime profiles can all target the same message/handoff seam. Provider-native adapters such as Anthropic or Claude Code are still a follow-up slice.
 
 ## How To Connect
 
@@ -131,7 +131,7 @@ OpenClaw, Hermes, Demo, and direct custom/local/hermes3d runtime profiles can al
 
 Before enabling the second office, make sure:
 
-- your local Hermes3D is already working with your local OpenClaw gateway;
+- your local Hermes3D is already working with your local gateway;
 - you know which remote mode you want to use;
 - the remote machine is reachable from your machine or browser;
 - any required token, origin allowlist, or private-network access is already configured.
@@ -165,11 +165,11 @@ Expected behavior:
 - remote agents show up when the remote office has active presence;
 - if the remote layout snapshot is unavailable, Hermes3D falls back to a default/fallback office rendering for the remote side.
 
-### Setup For `Remote OpenClaw gateway`
+### Setup For `Remote gateway`
 
 Use:
 
-- `Source type`: `Remote OpenClaw gateway`.
+- `Source type`: `Remote gateway`.
 - `Gateway URL`: the remote gateway WebSocket URL.
 - `Shared gateway token`: optional when the gateway already allows your Control UI origin and connection model.
 
@@ -193,7 +193,7 @@ Expected behavior:
 
 ### Same private network
 
-Use a reachable private IP or local hostname for the remote Hermes3D endpoint or OpenClaw gateway.
+Use a reachable private IP or local hostname for the remote Hermes3D endpoint or remote gateway.
 
 ### Tailscale
 
@@ -202,7 +202,7 @@ Tailscale is a good fit for this beta because it lets both sides connect over a 
 Common patterns:
 
 - remote Hermes3D endpoint over `https://<machine>.ts.net/api/office/presence`;
-- remote OpenClaw gateway over `wss://<machine>.ts.net` if you are proxying the gateway through HTTPS/WSS;
+- remote gateway over `wss://<machine>.ts.net` if you are proxying the gateway through HTTPS/WSS;
 - direct gateway over `ws://<machine>:18789` when both devices can reach the service privately.
 
 ## Disable Behavior
@@ -242,7 +242,7 @@ If that happens, check:
 
 ### You can reach an HTTPS page but gateway mode still fails
 
-Opening a web page in the browser does not automatically mean the OpenClaw gateway WebSocket is reachable.
+Opening a web page in the browser does not automatically mean the gateway WebSocket is reachable.
 
 Examples:
 
@@ -262,4 +262,4 @@ Examples:
 
 Use `Remote Hermes3D presence endpoint` when the other side runs Hermes3D and you want the most complete office visualization.
 
-Use `Remote OpenClaw gateway` when the other side only runs OpenClaw and you mainly want remote agent presence plus lightweight text messaging.
+Use `Remote gateway` when the other side only runs a gateway and you mainly want remote agent presence plus lightweight text messaging.

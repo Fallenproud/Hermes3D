@@ -19,7 +19,7 @@ const mockedSpawnSync = vi.mocked(spawnSync);
 
 const writeStudioSettings = (gatewayUrl: string) => {
   const stateDir = fs.mkdtempSync(path.join(os.tmpdir(), "studio-state-"));
-  process.env.OPENCLAW_STATE_DIR = stateDir;
+  process.env.HERMES_STATE_DIR = stateDir;
 
   const settingsDir = path.join(stateDir, "hermes3d");
   fs.mkdirSync(settingsDir, { recursive: true });
@@ -41,9 +41,9 @@ const writeStudioSettings = (gatewayUrl: string) => {
 describe("skills remove route", () => {
   beforeEach(() => {
     process.env = { ...ORIGINAL_ENV };
-    delete process.env.OPENCLAW_GATEWAY_SSH_TARGET;
-    delete process.env.OPENCLAW_GATEWAY_SSH_USER;
-    delete process.env.OPENCLAW_STATE_DIR;
+    delete process.env.HERMES_GATEWAY_SSH_TARGET;
+    delete process.env.HERMES_GATEWAY_SSH_USER;
+    delete process.env.HERMES_STATE_DIR;
     mockedSpawnSync.mockReset();
   });
 
@@ -66,8 +66,8 @@ describe("skills remove route", () => {
       status: 0,
       stdout: JSON.stringify({
         removed: true,
-        removedPath: "/home/ubuntu/.openclaw/skills/github",
-        source: "openclaw-managed",
+        removedPath: "/home/ubuntu/.hermes/skills/github",
+        source: "hermes-managed",
       }),
       stderr: "",
       error: undefined,
@@ -79,10 +79,10 @@ describe("skills remove route", () => {
         headers: { "content-type": "application/json" },
         body: JSON.stringify({
           skillKey: "github",
-          source: "openclaw-managed",
-          baseDir: "/home/ubuntu/.openclaw/skills/github",
-          workspaceDir: "/home/ubuntu/.openclaw/workspace-main",
-          managedSkillsDir: "/home/ubuntu/.openclaw/skills",
+          source: "hermes-managed",
+          baseDir: "/home/ubuntu/.hermes/skills/github",
+          workspaceDir: "/home/ubuntu/.hermes/workspace-main",
+          managedSkillsDir: "/home/ubuntu/.hermes/skills",
         }),
       })
     );
@@ -101,7 +101,7 @@ describe("skills remove route", () => {
         "-s",
         "--",
         "github",
-        "openclaw-managed",
+        "hermes-managed",
       ])
     );
   });
@@ -121,7 +121,7 @@ describe("skills remove route", () => {
         headers: { "content-type": "application/json" },
         body: JSON.stringify({
           skillKey: "github",
-          source: "openclaw-workspace",
+          source: "hermes-workspace",
           baseDir: skillDir,
           workspaceDir,
           managedSkillsDir,
@@ -138,7 +138,7 @@ describe("skills remove route", () => {
     expect(body.result).toEqual({
       removed: true,
       removedPath: skillDir,
-      source: "openclaw-workspace",
+      source: "hermes-workspace",
     });
     expect(fs.existsSync(skillDir)).toBe(false);
   });
@@ -159,10 +159,10 @@ describe("skills remove route", () => {
         headers: { "content-type": "application/json" },
         body: JSON.stringify({
           skillKey: "github",
-          source: "openclaw-workspace",
+          source: "hermes-workspace",
           baseDir: "/home/ubuntu/workspace-main/skills/github",
           workspaceDir: "/home/ubuntu/workspace-main",
-          managedSkillsDir: "/home/ubuntu/.openclaw/skills",
+          managedSkillsDir: "/home/ubuntu/.hermes/skills",
         }),
       })
     );

@@ -4,7 +4,7 @@ import fs from "node:fs";
 import os from "node:os";
 import path from "node:path";
 
-import { resolveUserPath } from "@/lib/clawdbot/paths";
+import { resolveUserPath } from "@/lib/hermes/paths";
 
 export const runtime = "nodejs";
 

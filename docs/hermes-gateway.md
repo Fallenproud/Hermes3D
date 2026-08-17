@@ -1,9 +1,9 @@
 # Hermes Gateway Adapter
 
-Hermes3D can run against Hermes by using the bundled adapter in
+Hermes3D runs against Hermes by using the bundled adapter in
 [`server/hermes-gateway-adapter.js`](../server/hermes-gateway-adapter.js).
 
-This is the current production-ready Hermes path in this repository.
+This is the default backend path in this repository.
 It is not yet a fully native Studio-side Hermes provider. Instead, it
 uses the runtime seam in Studio while Hermes is exposed through a
 Hermes3D-compatible WebSocket adapter.
@@ -104,22 +104,22 @@ own conversation state.
 
 ## Production-readiness notes
 
-This adapter includes the fixes that blocked the original Hermes PR:
+The adapter behavior worth knowing about:
 
-- `chat.abort` now aborts only the requested `runId` or `sessionKey`
+- `chat.abort` aborts only the requested `runId` or `sessionKey`
   instead of cancelling every active run
 - history clears from `sessions.reset`, `agents.delete`, and
-  `dismiss_agent` now persist to disk immediately
-- `scripts/hermes3d-start.sh` no longer hardcodes one developer's local path
+  `dismiss_agent` persist to disk immediately
+- `scripts/hermes3d-start.sh` resolves the repo root dynamically instead of
+  hardcoding one developer's local path
 
 ## ACP status
 
 Hermes has a real ACP surface and that remains the preferred long-term
 integration direction.
 
-This branch does not replace the adapter with ACP yet. The current
-production-ready path uses the adapter because it works with the existing
-Hermes3D gateway contract today and is ready for upstream testing now.
+The adapter has not been replaced with ACP yet. The current path uses the
+adapter because it works with the existing Hermes3D gateway contract today.
 
 The runtime seam added in Studio is what makes an ACP-backed Hermes
 provider feasible as a follow-up without reworking the whole UI again.
@@ -145,17 +145,12 @@ It is loaded on startup and updated when conversations change.
 
 ## When to use demo mode instead
 
-If you only want to see the office boot without installing Hermes or
-OpenClaw, use:
+If you only want to see the office boot without installing Hermes, use:
 
 ```bash
 npm run demo-gateway
 npm run dev
 ```
 
-That starts a bundled mock gateway for a no-framework Hermes3D demo.
-
-## Using OpenClaw instead
-
-If you want the OpenClaw path, do not run the Hermes adapter. Start
-OpenClaw and point Hermes3D at that gateway instead.
+That starts a bundled mock gateway for a no-framework Hermes3D demo. Both
+adapters default to port `18789`, so run only one of them at a time.

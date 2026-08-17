@@ -59,21 +59,16 @@ export const ConnectionPanel = ({
   const applyHermes3dPreset = () => {
     onAdapterTypeChange("hermes3d");
   };
-  const applyOpenClawPreset = () => {
-    onAdapterTypeChange("openclaw");
-  };
   const selectedAdapterHint =
-    selectedAdapterType === "openclaw"
-      ? "OpenClaw owns provider/model routing behind the gateway."
-      : selectedAdapterType === "hermes"
-        ? "Hermes owns provider/account routing behind the gateway."
-        : selectedAdapterType === "demo"
-          ? "Demo can seed a local main agent or connect to the mock gateway."
-          : selectedAdapterType === "hermes3d"
-            ? "Hermes3D runtime keeps Hermes3D transcript semantics over direct HTTP."
-            : selectedAdapterType === "local"
-              ? "Local runtime expects a direct orchestrator boundary."
-              : "Custom is a generic runtime endpoint, not a provider-native adapter.";
+    selectedAdapterType === "hermes"
+      ? "Hermes owns provider/account routing behind the gateway."
+      : selectedAdapterType === "demo"
+        ? "Demo can seed a local main agent or connect to the mock gateway."
+        : selectedAdapterType === "hermes3d"
+          ? "Hermes3D runtime keeps Hermes3D transcript semantics over direct HTTP."
+          : selectedAdapterType === "local"
+            ? "Local runtime expects a direct orchestrator boundary."
+            : "Custom is a generic runtime endpoint, not a provider-native adapter.";
 
   return (
     <div className="fade-up-delay flex flex-col gap-3">
@@ -174,13 +169,6 @@ export const ConnectionPanel = ({
           onClick={applyCustomPreset}
         >
           Custom backend
-        </button>
-        <button
-          className="ui-btn-secondary px-3 py-1.5 text-[11px] font-semibold tracking-[0.05em]"
-          type="button"
-          onClick={applyOpenClawPreset}
-        >
-          OpenClaw backend
         </button>
       </div>
       {error ? (

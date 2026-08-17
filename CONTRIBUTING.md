@@ -5,9 +5,9 @@ Thanks for helping improve Hermes3D.
 Please use GitHub Issues for bugs, feature requests, and questions about planned work.
 
 ## Before you start
-- Install OpenClaw and confirm the gateway runs locally.
-- This repo is UI-only and reads config from `~/.openclaw` with legacy fallback to `~/.moltbot` or `~/.clawdbot`.
-- It does not run or build the gateway from source.
+- Start a gateway first: run `npm run hermes-adapter` against a local Hermes API, or `npm run demo-gateway` if you only need the office to boot.
+- This repo is UI-only and reads config from `~/.hermes`.
+- It does not run or build the backend from source.
 - Read `CODE_DOCUMENTATION.md` for the repo code map, extension points, and the recommended onboarding order through the codebase.
 - Use `ROADMAP.md` if you are looking for starter work or near-term priorities.
 

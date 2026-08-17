@@ -68,7 +68,7 @@ export async function POST(request: Request) {
       message.includes("Refusing to restore over existing path") ||
       message.includes("Gateway URL is missing") ||
       message.includes("Invalid gateway URL") ||
-      message.includes("require OPENCLAW_GATEWAY_SSH_TARGET")
+      message.includes("require HERMES_GATEWAY_SSH_TARGET")
         ? 400
         : 500;
     return NextResponse.json({ error: message }, { status });
@@ -116,7 +116,7 @@ export async function PUT(request: Request) {
       message.includes("Invalid agentId") ||
       message.includes("Gateway URL is missing") ||
       message.includes("Invalid gateway URL") ||
-      message.includes("require OPENCLAW_GATEWAY_SSH_TARGET")
+      message.includes("require HERMES_GATEWAY_SSH_TARGET")
         ? 400
         : 500;
     return NextResponse.json({ error: message }, { status });

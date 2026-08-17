@@ -23,13 +23,13 @@ Describe alternatives you've considered.
 
 A clear and concise description of any alternative solutions or features you've considered.
 
-**OpenClaw compatibility**
-Hermes3D depends on **OpenClaw**. Any proposed feature must remain compatible with OpenClaw and should not break the integration between the two projects.
+**Hermes compatibility**
+Hermes3D depends on **Hermes**. Any proposed feature must remain compatible with Hermes and should not break the integration between the two projects.
 
-If this feature affects OpenClaw, please describe:
+If this feature affects Hermes, please describe:
 
-- How it interacts with OpenClaw
-- Whether changes to OpenClaw would be required
+- How it interacts with Hermes
+- Whether changes to Hermes would be required
 - Any compatibility considerations
 
 **Additional context**

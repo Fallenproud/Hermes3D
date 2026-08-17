@@ -15,8 +15,8 @@ describe("ConnectionPanel close control", () => {
       createElement(ConnectionPanel, {
         gatewayUrl: "ws://127.0.0.1:18789",
         token: "token",
-        selectedAdapterType: "openclaw",
-        activeAdapterType: "openclaw",
+        selectedAdapterType: "hermes",
+        activeAdapterType: "hermes",
         status: "disconnected",
         error: null,
         onGatewayUrlChange: vi.fn(),
@@ -37,8 +37,8 @@ describe("ConnectionPanel close control", () => {
       createElement(ConnectionPanel, {
         gatewayUrl: "ws://127.0.0.1:18789",
         token: "token",
-        selectedAdapterType: "openclaw",
-        activeAdapterType: "openclaw",
+        selectedAdapterType: "hermes",
+        activeAdapterType: "hermes",
         status: "disconnected",
         error: null,
         onGatewayUrlChange: vi.fn(),
@@ -57,8 +57,8 @@ describe("ConnectionPanel close control", () => {
       createElement(ConnectionPanel, {
         gatewayUrl: "ws://127.0.0.1:18789",
         token: "token",
-        selectedAdapterType: "openclaw",
-        activeAdapterType: "openclaw",
+        selectedAdapterType: "hermes",
+        activeAdapterType: "hermes",
         status: "disconnected",
         error: null,
         onGatewayUrlChange: vi.fn(),
@@ -77,8 +77,8 @@ describe("ConnectionPanel close control", () => {
       createElement(ConnectionPanel, {
         gatewayUrl: "ws://127.0.0.1:18789",
         token: "token",
-        selectedAdapterType: "openclaw",
-        activeAdapterType: "openclaw",
+        selectedAdapterType: "hermes",
+        activeAdapterType: "hermes",
         status: "connected",
         error: null,
         onGatewayUrlChange: vi.fn(),

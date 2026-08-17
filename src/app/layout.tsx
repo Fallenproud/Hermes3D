@@ -4,7 +4,7 @@ import "./globals.css";
 
 export const metadata: Metadata = {
   title: "Hermes3D",
-  description: "Focused operator studio for the OpenClaw gateway.",
+  description: "Focused operator studio for the Hermes gateway.",
 };
 
 const display = Bebas_Neue({

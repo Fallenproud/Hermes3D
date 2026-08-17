@@ -28,17 +28,17 @@ if not managed_skills_dir_raw:
   raise SystemExit("managedSkillsDir is required.")
 
 allowed_sources = {
-  "openclaw-managed",
-  "openclaw-workspace",
+  "hermes-managed",
+  "hermes-workspace",
 }
 if source not in allowed_sources:
   raise SystemExit(f"Unsupported skill source for removal: {source}")
 
 base_dir = pathlib.Path(base_dir_raw).expanduser().resolve(strict=False)
-state_dir = (pathlib.Path.home() / ".openclaw").resolve(strict=False)
+state_dir = (pathlib.Path.home() / ".hermes").resolve(strict=False)
 managed_skills_root = (state_dir / "skills").resolve(strict=False)
 
-if source == "openclaw-managed":
+if source == "hermes-managed":
   allowed_root = managed_skills_root
 else:
   raise SystemExit("Remote workspace skill removal is not supported over SSH.")

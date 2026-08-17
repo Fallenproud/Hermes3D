@@ -1,6 +1,6 @@
 # Creating Skills
 
-This repository ships developer-created marketplace skills as packaged assets that Hermes3D can install into an OpenClaw workspace through the gateway.
+This repository ships developer-created marketplace skills as packaged assets that Hermes3D can install into an agent workspace through the gateway.
 
 Use the existing `todo-board` skill as the reference implementation.
 
@@ -57,7 +57,7 @@ Use this pattern:
 ---
 name: my-skill
 description: Short description of what the skill does.
-metadata: {"openclaw":{"skillKey":"my-skill-key"}}
+metadata: {"hermes":{"skillKey":"my-skill-key"}}
 ---
 
 # My Skill
@@ -68,7 +68,7 @@ Explain when the skill should be used, where it stores state, how it reads and w
 Notes:
 
 - `name` is the user-facing skill name.
-- `metadata.openclaw.skillKey` must stay stable and should match the installed folder name.
+- `metadata.hermes.skillKey` must stay stable and should match the installed folder name.
 - Every skill must define a `## Trigger` section that explains what activates the skill and what the agent should physically do in Hermes3D when it activates.
 - Write instructions as if the model will follow them directly.
 - If the skill stores state, define the exact file path and schema.
@@ -166,7 +166,7 @@ Add a `PackagedSkillDefinition` entry:
   skillKey: "my-skill-key",
   name: "my-skill",
   description: "Short description.",
-  installSource: "openclaw-workspace",
+  installSource: "hermes-workspace",
   creatorName: "your-handle",
   creatorUrl: "https://x.com/your-handle/",
 }
@@ -175,9 +175,9 @@ Add a `PackagedSkillDefinition` entry:
 Field meanings:
 
 - `packageId`: internal packaged asset ID, usually the folder name under `assets/skills/`.
-- `skillKey`: the OpenClaw skill key and installed folder name.
+- `skillKey`: the runtime skill key and installed folder name.
 - `name`: the human-facing skill name shown in the UI.
-- `installSource`: where the skill is installed. For current packaged skills this should be `"openclaw-workspace"`.
+- `installSource`: where the skill is installed. For current packaged skills this should be `"hermes-workspace"`.
 - `creatorName` and `creatorUrl`: shown as `Powered by ...` in the marketplace.
 
 ## 4. Add marketplace presentation metadata

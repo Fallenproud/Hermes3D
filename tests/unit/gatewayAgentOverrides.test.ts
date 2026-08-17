@@ -113,7 +113,7 @@ describe("updateGatewayAgentOverrides", () => {
               models: {
                 providers: {
                   xai: {
-                    models: [{ id: "grok", maxTokens: "__OPENCLAW_REDACTED__" }],
+                    models: [{ id: "grok", maxTokens: "__HERMES_REDACTED__" }],
                   },
                 },
               },
@@ -129,7 +129,7 @@ describe("updateGatewayAgentOverrides", () => {
           expect(parsed.models).toEqual({
             providers: {
               xai: {
-                models: [{ id: "grok", maxTokens: "__OPENCLAW_REDACTED__" }],
+                models: [{ id: "grok", maxTokens: "__HERMES_REDACTED__" }],
               },
             },
           });

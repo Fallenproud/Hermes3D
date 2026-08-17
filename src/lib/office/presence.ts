@@ -1,7 +1,7 @@
 import fs from "node:fs";
 import path from "node:path";
 
-import { resolveStateDir } from "@/lib/clawdbot/paths";
+import { resolveStateDir } from "@/lib/hermes/paths";
 import { readConfigAgentList } from "@/lib/gateway/agentConfig";
 import type { OfficeAgentState } from "@/lib/office/schema";
 
@@ -18,7 +18,7 @@ export type OfficePresenceSnapshot = {
   agents: OfficeAgentPresence[];
 };
 
-const OPENCLAW_CONFIG_FILENAME = "openclaw.json";
+const HERMES_CONFIG_FILENAME = "hermes.json";
 
 const stableHash = (input: string): number => {
   let hash = 0;
@@ -136,7 +136,7 @@ export const fetchRemoteOfficePresenceSnapshot = async (params: {
 };
 
 export const loadOfficePresenceSnapshot = (workspaceId: string): OfficePresenceSnapshot => {
-  const configPath = path.join(resolveStateDir(), OPENCLAW_CONFIG_FILENAME);
+  const configPath = path.join(resolveStateDir(), HERMES_CONFIG_FILENAME);
   const timestamp = new Date().toISOString();
   if (!fs.existsSync(configPath)) {
     return {

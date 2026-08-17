@@ -176,8 +176,8 @@ const resolveOfficeGymSkillDirectiveFromNormalized = (
     /\benable\s+(?:a\s+)?skill\b/,
     /\bsetup\s+(?:a\s+)?skill\b/,
     /\bconfigure\s+(?:a\s+)?skill\b/,
-    /\bopenclaw\s+skill\b/,
-    /\bskill\s+for\s+openclaw\b/,
+    /\bhermes\s+skill\b/,
+    /\bskill\s+for\s+hermes\b/,
   ];
   return skillIntentPatterns.some((pattern) => pattern.test(normalized))
     ? "gym"

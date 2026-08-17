@@ -1,6 +1,6 @@
 # Runtime Profile Architecture
 
-> Forward-looking runtime model for Hermes3D after the OpenClaw + Hermes adapter work landed on `main`.
+> Forward-looking runtime model for Hermes3D after the Hermes adapter work landed on `main`.
 
 ## Goal
 
@@ -26,18 +26,18 @@ behind it.
 
 Default path:
 
-- `OpenClaw` is the default runtime profile
+- `Hermes` is the default runtime profile
 
 Optional paths:
 
-- `Hermes Adapter`
+- `Demo Gateway`
 - `Custom Runtime(s)`
 
 The important rule is:
 
 - the UI keeps speaking one Hermes3D gateway contract
-- the backend behind that contract may be native OpenClaw, Hermes through
-  the adapter, or a custom runtime/provider
+- the backend behind that contract may be Hermes through the adapter, the
+  bundled demo gateway, or a custom runtime/provider
 
 ## Core Terms
 
@@ -47,7 +47,6 @@ A provider identifies the backend family behind a runtime profile.
 
 Initial provider set:
 
-- `openclaw`
 - `hermes`
 - `custom`
 - `demo`
@@ -64,8 +63,8 @@ A runtime profile is a named connection target.
 
 Examples:
 
-- `OpenClaw Default`
-- `Hermes Adapter`
+- `Hermes Default`
+- `Demo Gateway`
 - `Custom Staging Runtime`
 - `Custom Prod Runtime`
 
@@ -77,10 +76,10 @@ export type RuntimeProfileId = string;
 export type RuntimeProfile = {
   id: RuntimeProfileId;
   label: string;
-  provider: "openclaw" | "hermes" | "custom" | "demo";
+  provider: "hermes" | "custom" | "demo";
   gatewayUrl: string;
   token?: string | null;
-  adapterType?: "openclaw" | "hermes" | "custom" | "demo" | null;
+  adapterType?: "hermes" | "custom" | "demo" | null;
   enabled: boolean;
   defaultProfile: boolean;
   notes?: string | null;
@@ -100,8 +99,8 @@ A floor binding maps an office floor to a runtime profile.
 
 Examples:
 
-- `OpenClaw Floor -> openclaw-default`
-- `Hermes Floor -> hermes-default`
+- `Hermes Ground Floor -> hermes-default`
+- `Hermes Floor -> hermes-first`
 - `Custom Floor -> custom-default`
 - `Lobby -> null`
 - `Campus -> null`
@@ -130,12 +129,12 @@ Provider -> Runtime Profile -> Floor Binding
 
 Examples:
 
-- provider: `openclaw`
-  - profile: `openclaw-default`
-  - bound floor: `openclaw-ground`
-
 - provider: `hermes`
   - profile: `hermes-default`
+  - bound floor: `hermes-ground`
+
+- provider: `hermes`
+  - profile: `hermes-supervisor`
   - bound floor: `hermes-first`
 
 - provider: `custom`
@@ -149,14 +148,14 @@ Examples:
 
 Initial default behavior should be:
 
-- if nothing else is configured, Hermes3D prefers `OpenClaw`
-- Hermes remains optional and adapter-backed
+- if nothing else is configured, Hermes3D prefers `Hermes`
+- the demo gateway remains available for offices with no real backend
 - custom runtimes remain optional and profile-driven
 
 That means:
 
-- OpenClaw is the safe baseline
-- Hermes should not destabilize the default path
+- Hermes is the safe baseline
+- demo mode should not destabilize the default path
 - custom runtimes should not require special-case UI logic
 
 ## Hermes Adapter Position
@@ -222,13 +221,13 @@ This model supports the current Office Systems direction cleanly.
   - function-backed
   - no runtime binding required
 
-- `OpenClaw Floor`
+- `Hermes Ground Floor`
   - provider-backed
-  - bound to `openclaw-default`
+  - bound to `hermes-default`
 
 - `Hermes Floor`
   - provider-backed
-  - bound to `hermes-default`
+  - bound to `hermes-supervisor`
 
 - `Custom Floor`
   - provider-backed
@@ -264,8 +263,8 @@ Recommended next branches:
 Define:
 
 - provider vs profile vs floor binding
-- `OpenClaw` default
-- `Hermes Adapter` optional
+- `Hermes` default
+- `Demo Gateway` optional
 - `Custom Runtime(s)` optional
 - one gateway contract, different backends
 
@@ -275,7 +274,6 @@ First pass should check:
 
 - Hermes3D settings/env
 - gateway reachability
-- OpenClaw version
 - Hermes adapter/API availability
 - auth/token issues
 - common websocket/origin/secure-context failures
@@ -315,6 +313,6 @@ Hermes3D should move to a runtime profile model where:
 - profiles describe named connection targets
 - floors bind to profiles
 
-OpenClaw remains the default.
-Hermes adapter remains optional.
+Hermes remains the default.
+The demo gateway remains available for backend-free exploration.
 Custom runtimes become first-class without special-case UI debt.

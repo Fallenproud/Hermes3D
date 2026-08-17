@@ -1,7 +1,7 @@
 import fs from "node:fs";
 import path from "node:path";
 
-import { resolveStateDir } from "@/lib/clawdbot/paths";
+import { resolveStateDir } from "@/lib/hermes/paths";
 import { createEmptyOfficeMap, normalizeOfficeMap, type OfficeMap } from "@/lib/office/schema";
 
 export type OfficeRecord = {

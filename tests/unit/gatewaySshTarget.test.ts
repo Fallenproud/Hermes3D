@@ -9,7 +9,7 @@ describe("gateway ssh target resolution", () => {
   it("uses_configured_target_with_at_sign", () => {
     expect(
       resolveConfiguredSshTarget({
-        OPENCLAW_GATEWAY_SSH_TARGET: "me@example.test",
+        HERMES_GATEWAY_SSH_TARGET: "me@example.test",
       } as unknown as NodeJS.ProcessEnv)
     ).toBe("me@example.test");
   });
@@ -17,8 +17,8 @@ describe("gateway ssh target resolution", () => {
   it("combines_user_and_target_when_target_missing_at_sign", () => {
     expect(
       resolveConfiguredSshTarget({
-        OPENCLAW_GATEWAY_SSH_TARGET: "example.test",
-        OPENCLAW_GATEWAY_SSH_USER: "me",
+        HERMES_GATEWAY_SSH_TARGET: "example.test",
+        HERMES_GATEWAY_SSH_USER: "me",
       } as unknown as NodeJS.ProcessEnv)
     ).toBe("me@example.test");
   });

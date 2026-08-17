@@ -1,6 +1,6 @@
 import fs from "node:fs";
 import path from "node:path";
-import { resolveStateDir } from "@/lib/clawdbot/paths";
+import { resolveStateDir } from "@/lib/hermes/paths";
 import type { OfficeLayoutSnapshot } from "@/lib/office/layoutSnapshot";
 
 type LayoutSnapshotStore = {

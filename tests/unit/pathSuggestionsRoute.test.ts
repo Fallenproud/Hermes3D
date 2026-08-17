@@ -7,7 +7,7 @@ import path from "node:path";
 let tempHome: string | null = null;
 
 const setupHome = () => {
-  tempHome = fs.mkdtempSync(path.join(os.tmpdir(), "openclaw-home-"));
+  tempHome = fs.mkdtempSync(path.join(os.tmpdir(), "hermes-home-"));
   vi.spyOn(os, "homedir").mockReturnValue(tempHome);
 
   fs.mkdirSync(path.join(tempHome, "Documents"), { recursive: true });

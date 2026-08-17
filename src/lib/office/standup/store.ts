@@ -1,7 +1,7 @@
 import fs from "node:fs";
 import path from "node:path";
 
-import { resolveStateDir } from "@/lib/clawdbot/paths";
+import { resolveStateDir } from "@/lib/hermes/paths";
 import type { StandupMeeting, StandupMeetingStore } from "@/lib/office/standup/types";
 
 const STORE_DIR = "hermes3d";

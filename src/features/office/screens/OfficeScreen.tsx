@@ -148,7 +148,7 @@ import {
 import {
   buildCompanyRolePermissionsDraft,
   resolveCompanyPlanningAgent,
-  runOpenClawPlanningPrompt,
+  runHermesPlanningPrompt,
 } from "@/features/company-builder/operations/companyBuilderGateway";
 import { runCompanyBootstrapOperation } from "@/features/company-builder/operations/companyBootstrapOperation";
 import type {
@@ -262,8 +262,8 @@ const createDemoMainAgentSeed = (): {
   toolCallingEnabled: false,
   showThinkingTraces: false,
 });
-const MAX_OPENCLAW_LOG_ENTRIES = 200;
-const MAX_OPENCLAW_AGENT_OUTPUT_LINES = 12;
+const MAX_HERMES_LOG_ENTRIES = 200;
+const MAX_HERMES_AGENT_OUTPUT_LINES = 12;
 const OFFICE_DANCE_MS = 60_000;
 const GATEWAY_LOADING_OVERLAY_DELAY_MS = 1_200;
 const GATEWAY_CONNECT_OVERLAY_DELAY_MS = 1_500;
@@ -292,7 +292,7 @@ const getLatestUserRequestForAgent = (
   };
 };
 
-type OpenClawLogEntry = {
+type HermesLogEntry = {
   id: string;
   timestamp: string;
   eventName: string;
@@ -338,7 +338,7 @@ type PhoneCallSpeakPayload = {
   scenario: MockPhoneCallScenario;
 };
 
-const createOpenClawLogEntry = (params: {
+const createHermesLogEntry = (params: {
   eventName: string;
   eventKind: string;
   summary: string;
@@ -348,9 +348,9 @@ const createOpenClawLogEntry = (params: {
   thinkingText?: string | null;
   streamText?: string | null;
   toolText?: string | null;
-}): OpenClawLogEntry => ({
+}): HermesLogEntry => ({
   id: randomUUID(),
-  timestamp: formatOpenClawTimestamp(Date.now()),
+  timestamp: formatHermesTimestamp(Date.now()),
   eventName: params.eventName,
   eventKind: params.eventKind,
   summary: params.summary,
@@ -362,7 +362,7 @@ const createOpenClawLogEntry = (params: {
   payloadText: safeJsonStringify(params.payload ?? null),
 });
 
-const formatOpenClawTimestamp = (timestampMs: number) => {
+const formatHermesTimestamp = (timestampMs: number) => {
   const date = new Date(timestampMs);
   const hh = String(date.getHours()).padStart(2, "0");
   const mm = String(date.getMinutes()).padStart(2, "0");
@@ -371,7 +371,7 @@ const formatOpenClawTimestamp = (timestampMs: number) => {
   return `${hh}:${mm}:${ss}.${ms}`;
 };
 
-const formatOpenClawValue = (value: string | null | undefined) => {
+const formatHermesValue = (value: string | null | undefined) => {
   const trimmed = value?.trim() ?? "";
   return trimmed || "-";
 };
@@ -441,7 +441,7 @@ const safeJsonStringify = (value: unknown) => {
 const escapeRegExp = (value: string) =>
   value.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
 
-const renderOpenClawHighlightedText = (
+const renderHermesHighlightedText = (
   value: string,
   query: string,
 ): ReactNode => {
@@ -468,7 +468,7 @@ const resolveMessageRole = (message: unknown) =>
     ? ((message as Record<string, unknown>).role ?? null)
     : null;
 
-const formatOpenClawEventLogEntry = (event: EventFrame): OpenClawLogEntry => {
+const formatHermesEventLogEntry = (event: EventFrame): HermesLogEntry => {
   const eventKind = classifyGatewayEventKind(event.event);
   const baseSummary = `seq=${event.seq ?? "-"} stateVersion=${safeJsonStringify(event.stateVersion ?? null)}`;
   let summary = baseSummary;
@@ -523,7 +523,7 @@ const formatOpenClawEventLogEntry = (event: EventFrame): OpenClawLogEntry => {
     }
   }
 
-  return createOpenClawLogEntry({
+  return createHermesLogEntry({
     eventName: event.event,
     eventKind,
     summary,
@@ -947,11 +947,11 @@ const inferRunningFromAgentSessions = async (params: {
 };
 
 type OfficeScreenProps = {
-  showOpenClawConsole?: boolean;
+  showHermesConsole?: boolean;
 };
 
 export function OfficeScreen({
-  showOpenClawConsole = true,
+  showHermesConsole = true,
 }: OfficeScreenProps) {
   // Patch Hermes Phase 2: avoid useSearchParams() at component root — it
   // suspends during hydration in Next.js dev mode and keeps the parent
@@ -1022,13 +1022,13 @@ export function OfficeScreen({
   const deskMonitorCacheRef = useRef<
     Map<string, { agent: AgentState; monitor: OfficeDeskMonitor }>
   >(new Map());
-  const [openClawLogEntries, setOpenClawLogEntries] = useState<
-    OpenClawLogEntry[]
+  const [hermesLogEntries, setHermesLogEntries] = useState<
+    HermesLogEntry[]
   >([]);
-  const [openClawConsoleCollapsed, setOpenClawConsoleCollapsed] =
+  const [hermesConsoleCollapsed, setHermesConsoleCollapsed] =
     useState(true);
-  const [openClawConsoleSearch, setOpenClawConsoleSearch] = useState("");
-  const [openClawConsoleCopyStatus, setOpenClawConsoleCopyStatus] = useState<
+  const [hermesConsoleSearch, setHermesConsoleSearch] = useState("");
+  const [hermesConsoleCopyStatus, setHermesConsoleCopyStatus] = useState<
     "idle" | "copied" | "error"
   >("idle");
   const taskBoardEventHandlerRef = useRef<(event: EventFrame) => void>(() => {});
@@ -2007,7 +2007,7 @@ export function OfficeScreen({
         throw new Error("Create or load at least one agent before using AI suggestions.");
       }
       setCompanyBuilderStatusLine(statusText);
-      return runOpenClawPlanningPrompt({
+      return runHermesPlanningPrompt({
         client,
         dispatch,
         agent: livePlannerAgent,
@@ -2104,7 +2104,7 @@ export function OfficeScreen({
         const message = error instanceof Error ? error.message : String(error);
         return (
           message.includes("Permission denied") ||
-          message.includes("OPENCLAW_GATEWAY_SSH_TARGET") ||
+          message.includes("HERMES_GATEWAY_SSH_TARGET") ||
           message.includes("Invalid gateway URL") ||
           message.includes("Gateway URL is missing")
         );
@@ -2409,7 +2409,7 @@ export function OfficeScreen({
       );
       if (!agent) return;
       const confirmed = window.confirm(
-        `Delete ${agent.name}? This removes the agent record from OpenClaw and clears its scheduled automations. Hermes3D will not touch workspace files.`,
+        `Delete ${agent.name}? This removes the agent record from Hermes and clears its scheduled automations. Hermes3D will not touch workspace files.`,
       );
       if (!confirmed) return;
 
@@ -2578,13 +2578,13 @@ export function OfficeScreen({
           }
           // Do not replay movement directives from history refresh.
           // History can include old transport commands; replaying them causes auto-walks on load.
-          setOpenClawLogEntries((previous) => {
+          setHermesLogEntries((previous) => {
             const next = [
               ...previous,
-              createOpenClawLogEntry({
+              createHermesLogEntry({
                 eventName: "history-refresh",
                 eventKind: "derived",
-                summary: `session=${requestedSessionKey} reason=${params.reason} lastUser=${formatOpenClawValue(lastUser)} lastAssistant=${formatOpenClawValue(derived.lastAssistant)}`,
+                summary: `session=${requestedSessionKey} reason=${params.reason} lastUser=${formatHermesValue(lastUser)} lastAssistant=${formatHermesValue(derived.lastAssistant)}`,
                 messageText: lastUser || null,
                 streamText: derived.lastAssistant ?? null,
                 payload: {
@@ -2596,7 +2596,7 @@ export function OfficeScreen({
                 },
               }),
             ];
-            return next.slice(-MAX_OPENCLAW_LOG_ENTRIES);
+            return next.slice(-MAX_HERMES_LOG_ENTRIES);
           });
           if (debugEnabled) {
             console.info(
@@ -2610,10 +2610,10 @@ export function OfficeScreen({
             );
           }
         } catch (error) {
-          setOpenClawLogEntries((previous) => {
+          setHermesLogEntries((previous) => {
             const next = [
               ...previous,
-              createOpenClawLogEntry({
+              createHermesLogEntry({
                 eventName: "history-refresh",
                 eventKind: "error",
                 summary: `session=${requestedSessionKey} reason=${params.reason} refresh failed`,
@@ -2624,7 +2624,7 @@ export function OfficeScreen({
                 },
               }),
             ];
-            return next.slice(-MAX_OPENCLAW_LOG_ENTRIES);
+            return next.slice(-MAX_HERMES_LOG_ENTRIES);
           });
           if (!isGatewayDisconnectLikeError(error)) {
             console.error(
@@ -2893,9 +2893,9 @@ export function OfficeScreen({
     );
     const unsubscribeEvent = client.onEvent((event) => {
       lastGatewayActivityAtRef.current = Date.now();
-      setOpenClawLogEntries((previous) => {
-        const next = [...previous, formatOpenClawEventLogEntry(event)];
-        return next.slice(-MAX_OPENCLAW_LOG_ENTRIES);
+      setHermesLogEntries((previous) => {
+        const next = [...previous, formatHermesEventLogEntry(event)];
+        return next.slice(-MAX_HERMES_LOG_ENTRIES);
       });
       refreshRecentTransportSessionHistory(event);
       setOfficeTriggerState((previous) =>
@@ -3938,10 +3938,10 @@ export function OfficeScreen({
       }
 
       const intentSnapshot = resolveOfficeIntentSnapshot(trimmed);
-      setOpenClawLogEntries((previous) => {
+      setHermesLogEntries((previous) => {
         const next = [
           ...previous,
-          createOpenClawLogEntry({
+          createHermesLogEntry({
             eventName: "office-intent",
             eventKind: "derived",
             summary: `agent=${agentId} gym=${intentSnapshot.gym?.source ?? "-"} qa=${intentSnapshot.qa ?? "-"} github=${intentSnapshot.github ?? "-"} desk=${intentSnapshot.desk ?? "-"} text=${intentSnapshot.text?.phase ?? "-"}`,
@@ -3953,7 +3953,7 @@ export function OfficeScreen({
             },
           }),
         ];
-        return next.slice(-MAX_OPENCLAW_LOG_ENTRIES);
+        return next.slice(-MAX_HERMES_LOG_ENTRIES);
       });
       const pendingPhoneCall = phoneCallByAgentId[agentId] ?? null;
       const pendingTextMessage = textMessageByAgentId[agentId] ?? null;
@@ -4116,7 +4116,7 @@ export function OfficeScreen({
       }
       const transcript = result?.transcript?.trim() ?? "";
       if (!transcript) {
-        throw new Error("OpenClaw returned an empty transcript.");
+        throw new Error("The transcription provider returned an empty transcript.");
       }
       return transcript;
     },
@@ -4308,8 +4308,8 @@ export function OfficeScreen({
     }
     return map;
   }, [state.agents]);
-  const openClawLiveStateText = useMemo(() => {
-    const lines = ["== LIVE OPENCLAW STATE =="];
+  const hermesLiveStateText = useMemo(() => {
+    const lines = ["== LIVE HERMES STATE =="];
     if (state.agents.length === 0) {
       lines.push("No agents loaded yet.");
       return lines.join("\n");
@@ -4322,10 +4322,10 @@ export function OfficeScreen({
         `status=${agent.status} runId=${agent.runId ?? "-"} session=${agent.sessionKey}`,
       );
       lines.push(
-        `lastActivity=${agent.lastActivityAt ? formatOpenClawTimestamp(agent.lastActivityAt) : "-"} lastAssistant=${agent.lastAssistantMessageAt ? formatOpenClawTimestamp(agent.lastAssistantMessageAt) : "-"}`,
+        `lastActivity=${agent.lastActivityAt ? formatHermesTimestamp(agent.lastActivityAt) : "-"} lastAssistant=${agent.lastAssistantMessageAt ? formatHermesTimestamp(agent.lastAssistantMessageAt) : "-"}`,
       );
       lines.push(
-        `latestPreview=${formatOpenClawValue(agent.latestPreview)} lastUser=${formatOpenClawValue(agent.lastUserMessage)}`,
+        `latestPreview=${formatHermesValue(agent.latestPreview)} lastUser=${formatHermesValue(agent.lastUserMessage)}`,
       );
       if (agent.thinkingTrace?.trim()) {
         lines.push("thinking>");
@@ -4336,7 +4336,7 @@ export function OfficeScreen({
         lines.push(agent.streamText.trim());
       }
       const recentOutput = agent.outputLines
-        .slice(-MAX_OPENCLAW_AGENT_OUTPUT_LINES)
+        .slice(-MAX_HERMES_AGENT_OUTPUT_LINES)
         .map((line) => line.trimEnd())
         .filter(Boolean);
       if (recentOutput.length > 0) {
@@ -4394,27 +4394,27 @@ export function OfficeScreen({
         ? "Loading remote office."
         : remoteOfficeAgents.length > 0
           ? `${remoteOfficeAgents.length} agents visible.`
-          : remoteOfficeSourceKind === "openclaw_gateway"
+          : remoteOfficeSourceKind === "hermes_gateway"
             ? "Connected to remote gateway. No agents visible yet."
           : remoteOfficeTokenConfigured
             ? "Connected. No agents visible yet."
             : "No agents visible yet.";
   const remoteMessagingAvailable =
-    remoteOfficeSourceKind === "openclaw_gateway" &&
+    remoteOfficeSourceKind === "hermes_gateway" &&
     remoteOfficeGatewayUrl.trim().length > 0;
   const remoteMessagingDisabledReason = remoteMessagingAvailable
     ? null
-    : remoteOfficeSourceKind !== "openclaw_gateway"
+    : remoteOfficeSourceKind !== "hermes_gateway"
       ? "Remote messaging currently works only with the remote gateway source."
       : remoteOfficeGatewayUrl.trim().length === 0
       ? "Remote messaging requires a remote gateway URL in office settings."
       : "Remote messaging is unavailable until the remote gateway is configured.";
-  const normalizedOpenClawConsoleSearch = openClawConsoleSearch
+  const normalizedHermesConsoleSearch = hermesConsoleSearch
     .trim()
     .toLowerCase();
-  const filteredOpenClawLogEntries = useMemo(() => {
-    if (!normalizedOpenClawConsoleSearch) return openClawLogEntries;
-    return openClawLogEntries.filter((entry) =>
+  const filteredHermesLogEntries = useMemo(() => {
+    if (!normalizedHermesConsoleSearch) return hermesLogEntries;
+    return hermesLogEntries.filter((entry) =>
       [
         entry.timestamp,
         entry.eventName,
@@ -4429,66 +4429,66 @@ export function OfficeScreen({
       ]
         .join("\n")
         .toLowerCase()
-        .includes(normalizedOpenClawConsoleSearch),
+        .includes(normalizedHermesConsoleSearch),
     );
-  }, [normalizedOpenClawConsoleSearch, openClawLogEntries]);
-  const openClawLiveStateMatchesSearch = useMemo(() => {
-    if (!normalizedOpenClawConsoleSearch) return true;
-    return openClawLiveStateText
+  }, [normalizedHermesConsoleSearch, hermesLogEntries]);
+  const hermesLiveStateMatchesSearch = useMemo(() => {
+    if (!normalizedHermesConsoleSearch) return true;
+    return hermesLiveStateText
       .toLowerCase()
-      .includes(normalizedOpenClawConsoleSearch);
-  }, [normalizedOpenClawConsoleSearch, openClawLiveStateText]);
-  const openClawConsoleExportJson = useMemo(
+      .includes(normalizedHermesConsoleSearch);
+  }, [normalizedHermesConsoleSearch, hermesLiveStateText]);
+  const hermesConsoleExportJson = useMemo(
     () =>
       safeJsonStringify({
         exportedAt: new Date().toISOString(),
-        searchQuery: openClawConsoleSearch,
-        visibleEventCount: filteredOpenClawLogEntries.length,
-        totalEventCount: openClawLogEntries.length,
-        liveStateMatchesSearch: openClawLiveStateMatchesSearch,
-        liveStateText: openClawLiveStateText,
-        events: filteredOpenClawLogEntries,
+        searchQuery: hermesConsoleSearch,
+        visibleEventCount: filteredHermesLogEntries.length,
+        totalEventCount: hermesLogEntries.length,
+        liveStateMatchesSearch: hermesLiveStateMatchesSearch,
+        liveStateText: hermesLiveStateText,
+        events: filteredHermesLogEntries,
       }),
     [
-      filteredOpenClawLogEntries,
-      openClawConsoleSearch,
-      openClawLiveStateMatchesSearch,
-      openClawLiveStateText,
-      openClawLogEntries.length,
+      filteredHermesLogEntries,
+      hermesConsoleSearch,
+      hermesLiveStateMatchesSearch,
+      hermesLiveStateText,
+      hermesLogEntries.length,
     ],
   );
 
-  const handleClearOpenClawConsole = useCallback(() => {
-    setOpenClawLogEntries([]);
+  const handleClearHermesConsole = useCallback(() => {
+    setHermesLogEntries([]);
   }, []);
-  const handleCopyOpenClawConsoleJson = useCallback(async () => {
+  const handleCopyHermesConsoleJson = useCallback(async () => {
     try {
-      await navigator.clipboard.writeText(openClawConsoleExportJson);
-      setOpenClawConsoleCopyStatus("copied");
+      await navigator.clipboard.writeText(hermesConsoleExportJson);
+      setHermesConsoleCopyStatus("copied");
       window.setTimeout(() => {
-        setOpenClawConsoleCopyStatus("idle");
+        setHermesConsoleCopyStatus("idle");
       }, 1800);
     } catch (error) {
-      console.error("Failed to copy OpenClaw console JSON.", error);
-      setOpenClawConsoleCopyStatus("error");
+      console.error("Failed to copy Hermes console JSON.", error);
+      setHermesConsoleCopyStatus("error");
       window.setTimeout(() => {
-        setOpenClawConsoleCopyStatus("idle");
+        setHermesConsoleCopyStatus("idle");
       }, 1800);
     }
-  }, [openClawConsoleExportJson]);
-  const handleDownloadOpenClawConsoleJson = useCallback(() => {
-    const blob = new Blob([openClawConsoleExportJson], {
+  }, [hermesConsoleExportJson]);
+  const handleDownloadHermesConsoleJson = useCallback(() => {
+    const blob = new Blob([hermesConsoleExportJson], {
       type: "application/json;charset=utf-8",
     });
     const url = window.URL.createObjectURL(blob);
     const anchor = document.createElement("a");
     anchor.href = url;
-    anchor.download = `openclaw-events-${Date.now()}.json`;
+    anchor.download = `hermes-events-${Date.now()}.json`;
     document.body.appendChild(anchor);
     anchor.click();
     anchor.remove();
     window.URL.revokeObjectURL(url);
-  }, [openClawConsoleExportJson]);
+  }, [hermesConsoleExportJson]);
 
   const monitorByAgentId = useMemo(
     () => {
@@ -4738,7 +4738,6 @@ export function OfficeScreen({
               localGatewayDefaults={localGatewayDefaults}
               status={status}
               error={gatewayError}
-              showApprovalHint={didAttemptGatewayConnect}
               onGatewayUrlChange={setGatewayUrl}
               onTokenChange={setToken}
               onAdapterTypeChange={setSelectedAdapterType}
@@ -4888,7 +4887,7 @@ export function OfficeScreen({
           taskBoardCronError={
             taskBoard.sharedTasksError ?? taskBoard.gatewayTasksError ?? taskBoard.cronError
           }
-          taskBoardCaptureDebug={showOpenClawConsole ? taskBoard.taskCaptureDebug : undefined}
+          taskBoardCaptureDebug={showHermesConsole ? taskBoard.taskCaptureDebug : undefined}
           onTaskBoardCreateCard={() => {
             taskBoard.createManualCard();
           }}
@@ -5087,7 +5086,7 @@ export function OfficeScreen({
               cronError={
                 taskBoard.sharedTasksError ?? taskBoard.gatewayTasksError ?? taskBoard.cronError
               }
-              taskCaptureDebug={showOpenClawConsole ? taskBoard.taskCaptureDebug : undefined}
+              taskCaptureDebug={showHermesConsole ? taskBoard.taskCaptureDebug : undefined}
               onCreateCard={() => {
                 taskBoard.createManualCard();
                 setActiveSidebarTab("kanban");
@@ -5172,38 +5171,38 @@ export function OfficeScreen({
         />
       ) : null}
 
-      {showOpenClawConsole ? (
+      {showHermesConsole ? (
         <section className="pointer-events-auto fixed bottom-3 left-3 z-30 flex w-[520px] max-w-[calc(100vw-1.5rem)] flex-col overflow-hidden rounded border border-cyan-500/25 bg-black/78 shadow-2xl backdrop-blur">
           <div className="flex items-center justify-between border-b border-cyan-500/15 px-3 py-2 font-mono text-[11px] uppercase tracking-[0.18em] text-cyan-200/80">
             <span>Agent Event Console</span>
             <div className="flex items-center gap-2">
               <span className="text-[10px] text-cyan-100/45">
                 agents {state.agents.length} | events{" "}
-                {filteredOpenClawLogEntries.length}/{openClawLogEntries.length}
+                {filteredHermesLogEntries.length}/{hermesLogEntries.length}
               </span>
               <button
                 type="button"
                 onClick={() => {
-                  void handleCopyOpenClawConsoleJson();
+                  void handleCopyHermesConsoleJson();
                 }}
                 className="rounded border border-cyan-500/20 px-2 py-0.5 text-[9px] text-cyan-100/70 transition-colors hover:border-cyan-400/45 hover:text-cyan-50"
               >
-                {openClawConsoleCopyStatus === "copied"
+                {hermesConsoleCopyStatus === "copied"
                   ? "Copied"
-                  : openClawConsoleCopyStatus === "error"
+                  : hermesConsoleCopyStatus === "error"
                     ? "Copy Failed"
                     : "Copy JSON"}
               </button>
               <button
                 type="button"
-                onClick={handleDownloadOpenClawConsoleJson}
+                onClick={handleDownloadHermesConsoleJson}
                 className="rounded border border-cyan-500/20 px-2 py-0.5 text-[9px] text-cyan-100/70 transition-colors hover:border-cyan-400/45 hover:text-cyan-50"
               >
                 Download JSON
               </button>
               <button
                 type="button"
-                onClick={handleClearOpenClawConsole}
+                onClick={handleClearHermesConsole}
                 className="rounded border border-cyan-500/20 px-2 py-0.5 text-[9px] text-cyan-100/70 transition-colors hover:border-cyan-400/45 hover:text-cyan-50"
               >
                 Clear
@@ -5211,31 +5210,31 @@ export function OfficeScreen({
               <button
                 type="button"
                 onClick={() =>
-                  setOpenClawConsoleCollapsed((previous) => !previous)
+                  setHermesConsoleCollapsed((previous) => !previous)
                 }
                 className="rounded border border-cyan-500/20 px-2 py-0.5 text-[9px] text-cyan-100/70 transition-colors hover:border-cyan-400/45 hover:text-cyan-50"
               >
-                {openClawConsoleCollapsed ? "Expand" : "Minimize"}
+                {hermesConsoleCollapsed ? "Expand" : "Minimize"}
               </button>
             </div>
           </div>
-          {!openClawConsoleCollapsed ? (
+          {!hermesConsoleCollapsed ? (
             <div className="flex h-[320px] flex-col gap-3 overflow-y-auto bg-[#02090b]/96 px-3 py-2 font-mono text-[10px] leading-4">
             <div className="rounded border border-cyan-500/10 bg-cyan-950/10 p-2">
               <div className="flex items-center gap-2">
                 <input
                   type="text"
-                  value={openClawConsoleSearch}
+                  value={hermesConsoleSearch}
                   onChange={(event) =>
-                    setOpenClawConsoleSearch(event.target.value)
+                    setHermesConsoleSearch(event.target.value)
                   }
                   placeholder="Search logs, payloads, thinking, user text."
                   className="min-w-0 flex-1 rounded border border-cyan-500/20 bg-black/35 px-2 py-1 text-[10px] normal-case tracking-normal text-cyan-50 placeholder:text-cyan-100/30 focus:border-cyan-400/40 focus:outline-none"
                 />
-                {openClawConsoleSearch ? (
+                {hermesConsoleSearch ? (
                   <button
                     type="button"
-                    onClick={() => setOpenClawConsoleSearch("")}
+                    onClick={() => setHermesConsoleSearch("")}
                     className="rounded border border-cyan-500/20 px-2 py-1 text-[9px] uppercase tracking-[0.16em] text-cyan-100/70 transition-colors hover:border-cyan-400/45 hover:text-cyan-50"
                   >
                     Reset
@@ -5243,34 +5242,34 @@ export function OfficeScreen({
                 ) : null}
               </div>
             </div>
-            {openClawLiveStateMatchesSearch ? (
+            {hermesLiveStateMatchesSearch ? (
               <div className="rounded border border-cyan-500/10 bg-cyan-950/10 p-2">
                 <div className="mb-1 text-[9px] uppercase tracking-[0.16em] text-cyan-300/70">
-                  Live OpenClaw State
+                  Live Hermes State
                 </div>
                 <pre className="whitespace-pre-wrap break-words text-cyan-100/80">
-                  {renderOpenClawHighlightedText(
-                    openClawLiveStateText,
-                    openClawConsoleSearch,
+                  {renderHermesHighlightedText(
+                    hermesLiveStateText,
+                    hermesConsoleSearch,
                   )}
                 </pre>
               </div>
             ) : (
               <div className="rounded border border-cyan-500/10 bg-cyan-950/10 p-2 text-cyan-100/45">
-                Live OpenClaw state does not match the current search.
+                Live Hermes state does not match the current search.
               </div>
             )}
             <div className="text-[9px] uppercase tracking-[0.16em] text-cyan-300/70">
-              Raw OpenClaw Gateway Events
+              Raw Hermes Gateway Events
             </div>
-            {filteredOpenClawLogEntries.length === 0 ? (
+            {filteredHermesLogEntries.length === 0 ? (
               <div className="rounded border border-cyan-500/10 bg-cyan-950/10 p-2 text-cyan-100/45">
-                {openClawLogEntries.length === 0
-                  ? "No OpenClaw gateway events received yet."
-                  : "No OpenClaw events match the current search."}
+                {hermesLogEntries.length === 0
+                  ? "No Hermes gateway events received yet."
+                  : "No Hermes events match the current search."}
               </div>
             ) : (
-              filteredOpenClawLogEntries.map((entry) => {
+              filteredHermesLogEntries.map((entry) => {
                 const isUserMessage = entry.role === "user";
                 return (
                   <div
@@ -5289,9 +5288,9 @@ export function OfficeScreen({
                             : "text-cyan-300/75"
                         }`}
                       >
-                        {renderOpenClawHighlightedText(
+                        {renderHermesHighlightedText(
                           `[${entry.timestamp}] ${entry.eventName} / ${entry.eventKind}`,
-                          openClawConsoleSearch,
+                          hermesConsoleSearch,
                         )}
                       </div>
                       {entry.role ? (
@@ -5307,9 +5306,9 @@ export function OfficeScreen({
                       ) : null}
                     </div>
                     <div className="mt-1 whitespace-pre-wrap break-words text-cyan-100/55">
-                      {renderOpenClawHighlightedText(
+                      {renderHermesHighlightedText(
                         entry.summary,
-                        openClawConsoleSearch,
+                        hermesConsoleSearch,
                       )}
                     </div>
                     {entry.messageText ? (
@@ -5318,9 +5317,9 @@ export function OfficeScreen({
                           User / Message Text
                         </div>
                         <div className="mt-1 whitespace-pre-wrap break-words">
-                          {renderOpenClawHighlightedText(
+                          {renderHermesHighlightedText(
                             entry.messageText,
-                            openClawConsoleSearch,
+                            hermesConsoleSearch,
                           )}
                         </div>
                       </div>
@@ -5331,9 +5330,9 @@ export function OfficeScreen({
                           Thinking
                         </div>
                         <div className="mt-1 whitespace-pre-wrap break-words">
-                          {renderOpenClawHighlightedText(
+                          {renderHermesHighlightedText(
                             entry.thinkingText,
-                            openClawConsoleSearch,
+                            hermesConsoleSearch,
                           )}
                         </div>
                       </div>
@@ -5344,9 +5343,9 @@ export function OfficeScreen({
                           Stream
                         </div>
                         <div className="mt-1 whitespace-pre-wrap break-words">
-                          {renderOpenClawHighlightedText(
+                          {renderHermesHighlightedText(
                             entry.streamText,
-                            openClawConsoleSearch,
+                            hermesConsoleSearch,
                           )}
                         </div>
                       </div>
@@ -5357,9 +5356,9 @@ export function OfficeScreen({
                           Tool Output
                         </div>
                         <div className="mt-1 whitespace-pre-wrap break-words">
-                          {renderOpenClawHighlightedText(
+                          {renderHermesHighlightedText(
                             entry.toolText,
-                            openClawConsoleSearch,
+                            hermesConsoleSearch,
                           )}
                         </div>
                       </div>
@@ -5369,9 +5368,9 @@ export function OfficeScreen({
                         Raw Payload
                       </summary>
                       <pre className="mt-1 whitespace-pre-wrap break-words text-cyan-100/45">
-                        {renderOpenClawHighlightedText(
+                        {renderHermesHighlightedText(
                           entry.payloadText,
-                          openClawConsoleSearch,
+                          hermesConsoleSearch,
                         )}
                       </pre>
                     </details>

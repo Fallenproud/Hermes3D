@@ -15,7 +15,6 @@ describe("office floor registry", () => {
   it("defines the canonical floor order", () => {
     expect(OFFICE_FLOORS.map((floor) => floor.id)).toEqual([
       "lobby",
-      "openclaw-ground",
       "hermes-first",
       "local-runtime",
       "hermes3d-runtime",
@@ -42,7 +41,6 @@ describe("office floor registry", () => {
   it("lists only enabled floors by default", () => {
     expect(listEnabledOfficeFloors().map((floor) => floor.id)).toEqual([
       "lobby",
-      "openclaw-ground",
       "hermes-first",
       "local-runtime",
       "hermes3d-runtime",
@@ -62,7 +60,6 @@ describe("office floor registry", () => {
   it("groups floors by zone for building navigation", () => {
     expect(listOfficeFloorsForZone("building").map((floor) => floor.id)).toEqual([
       "lobby",
-      "openclaw-ground",
       "hermes-first",
       "local-runtime",
       "hermes3d-runtime",
@@ -81,7 +78,7 @@ describe("office floor registry", () => {
   });
 
   it("cycles across enabled floors only", () => {
-    expect(getAdjacentEnabledOfficeFloorId("lobby", 1)).toBe("openclaw-ground");
+    expect(getAdjacentEnabledOfficeFloorId("lobby", 1)).toBe("hermes-first");
     expect(getAdjacentEnabledOfficeFloorId("lobby", -1)).toBe("custom-second");
   });
 });

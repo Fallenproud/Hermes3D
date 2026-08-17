@@ -1,6 +1,6 @@
 # Agent Bus Integration
 
-> Visualize AI coding sessions in Hermes3D's retro office — without OpenClaw.
+> Visualize AI coding sessions in Hermes3D's retro office — without an agent backend.
 
 [Agent Bus](https://github.com/emiliovos/agent-bus) is an open-source event routing system that bridges AI coding agents (Claude Code, Gemini, Codex, etc.) to Hermes3D. Agents appear in the 3D office, animate when working, and go idle between tasks. Zero inference cost — pure data routing.
 
@@ -10,7 +10,7 @@
 AI coding session → hook fires → Agent Bus hub → gateway :18789 → Hermes3D renders in 3D
 ```
 
-Agent Bus includes an **OpenClaw-compatible gateway** that speaks the same WebSocket protocol Hermes3D already uses. No Hermes3D code changes needed — just point `GATEWAY_URL` to the Agent Bus gateway.
+Agent Bus includes a **gateway-compatible server** that speaks the same WebSocket protocol Hermes3D already uses. No Hermes3D code changes needed — just point `GATEWAY_URL` to the Agent Bus gateway.
 
 ### Architecture
 
@@ -32,11 +32,11 @@ Agent Bus includes an **OpenClaw-compatible gateway** that speaks the same WebSo
                      ▼
 ┌──────────────────────────────────────────┐
 │ Agent Bus Gateway (:18789)               │
-│ OpenClaw protocol v2                     │
+│ Gateway protocol v2                      │
 │ In-memory agent registry                 │
 │ 10 RPC methods (connect, agents.list...) │
 └────────────────────┬─────────────────────┘
-                     │ WebSocket (OpenClaw frames)
+                     │ WebSocket (gateway frames)
                      ▼
 ┌──────────────────────────────────────────┐
 │ Hermes3D (:3000)                           │
@@ -66,7 +66,7 @@ npm run dev:all
 
 This starts:
 - Hub on `:4000` (event routing)
-- Gateway on `:18789` (OpenClaw protocol)
+- Gateway on `:18789` (gateway protocol)
 
 ### Connect Hermes3D
 
@@ -77,7 +77,7 @@ Point Hermes3D's gateway URL to Agent Bus:
 GATEWAY_URL=ws://localhost:18789
 ```
 
-Restart Hermes3D. It will connect to the Agent Bus gateway instead of OpenClaw.
+Restart Hermes3D. It will connect to the Agent Bus gateway instead of the Hermes adapter.
 
 ### Send Your First Event
 
@@ -123,7 +123,7 @@ Every tool use in Claude Code now appears as agent activity in Hermes3D.
 
 ## Gateway Protocol Compatibility
 
-The Agent Bus gateway implements OpenClaw protocol v2:
+The Agent Bus gateway implements gateway protocol v2:
 
 | RPC Method | Supported | Notes |
 |-----------|-----------|-------|
@@ -172,15 +172,15 @@ interface AgentEvent {
 }
 ```
 
-## Key Differences from OpenClaw
+## Key Differences from the Hermes Backend
 
-| Feature | OpenClaw | Agent Bus |
-|---------|----------|-----------|
+| Feature | Hermes | Agent Bus |
+|---------|--------|-----------|
 | Cost | API tokens per inference | $0 (pure routing) |
 | Agents | LLM-powered | Event-driven (any source) |
-| Setup | Gateway + API keys | `npm install && npm run dev:all` |
+| Setup | Hermes API + adapter | `npm install && npm run dev:all` |
 | Chat interaction | Bidirectional | View-only (v1) |
-| Agent sources | OpenClaw agents only | Any (Claude Code, Gemini, cron, etc.) |
+| Agent sources | Hermes agents only | Any (Claude Code, Gemini, cron, etc.) |
 
 ## Links
 

@@ -15,7 +15,7 @@ import type { OfficePresenceSnapshot } from "@/lib/office/presence";
 
 type UseRemoteOfficePresenceParams = {
   enabled: boolean;
-  sourceKind: "presence_endpoint" | "openclaw_gateway";
+  sourceKind: "presence_endpoint" | "hermes_gateway";
   presenceUrl: string;
   gatewayUrl: string;
   pollIntervalMs?: number;

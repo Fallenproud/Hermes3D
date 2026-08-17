@@ -21,7 +21,7 @@ export type SkillInstallOption = {
   bins: string[];
 };
 
-export type RemovableSkillSource = "openclaw-managed" | "openclaw-workspace";
+export type RemovableSkillSource = "hermes-managed" | "hermes-workspace";
 
 export type SkillStatusEntry = {
   name: string;

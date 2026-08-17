@@ -42,21 +42,21 @@ describe("skills install gateway", () => {
       client: { call } as unknown as GatewayClient,
       request: {
         packageId: "todo-board",
-        source: "openclaw-workspace",
-        workspaceDir: "/home/openclaw/workspace-demo",
-        managedSkillsDir: "/home/openclaw/.openclaw/skills",
+        source: "hermes-workspace",
+        workspaceDir: "/home/hermes/workspace-demo",
+        managedSkillsDir: "/home/hermes/.hermes/skills",
       },
     });
 
     expect(result).toEqual({
       installed: true,
-      installedPath: "/home/openclaw/workspace-demo/skills/todo-board",
-      source: "openclaw-workspace",
+      installedPath: "/home/hermes/workspace-demo/skills/todo-board",
+      source: "hermes-workspace",
       skillKey: "todo-board",
     });
     expect(call).toHaveBeenCalledWith("agents.create", {
       name: expect.stringContaining("Skill Installer"),
-      workspace: "/home/openclaw/workspace-demo",
+      workspace: "/home/hermes/workspace-demo",
     });
     expect(call).toHaveBeenCalledWith(
       "chat.send",
@@ -110,9 +110,9 @@ describe("skills install gateway", () => {
         client: { call } as unknown as GatewayClient,
         request: {
           packageId: "todo-board",
-          source: "openclaw-workspace",
-          workspaceDir: "/home/openclaw/workspace-demo",
-          managedSkillsDir: "/home/openclaw/.openclaw/skills",
+          source: "hermes-workspace",
+          workspaceDir: "/home/hermes/workspace-demo",
+          managedSkillsDir: "/home/hermes/.hermes/skills",
         },
       })
     ).rejects.toThrow("chat failed");
@@ -133,9 +133,9 @@ describe("skills install gateway", () => {
         client: { call } as unknown as GatewayClient,
         request: {
           packageId: "todo-board",
-          source: "openclaw-workspace",
-          workspaceDir: "/home/pi/.openclaw/workspace",
-          managedSkillsDir: "/home/pi/.openclaw/skills",
+          source: "hermes-workspace",
+          workspaceDir: "/home/pi/.hermes/workspace",
+          managedSkillsDir: "/home/pi/.hermes/skills",
           agentId: "soundhermes",
           agentName: "soundhermes",
         },
@@ -154,11 +154,11 @@ describe("skills install gateway", () => {
       if (method === "agents.files.get") {
         expect(params).toEqual({ agentId: "main", name: "IDENTITY.md" });
         return {
-          workspace: "/home/pi/.openclaw/workspace",
+          workspace: "/home/pi/.hermes/workspace",
           file: {
             missing: false,
             content: "# IDENTITY",
-            path: "/home/pi/.openclaw/workspace-main/IDENTITY.md",
+            path: "/home/pi/.hermes/workspace-main/IDENTITY.md",
           },
         };
       }
@@ -198,18 +198,18 @@ describe("skills install gateway", () => {
       client: { call } as unknown as GatewayClient,
       request: {
         packageId: "todo-board",
-        source: "openclaw-workspace",
-        workspaceDir: "/home/pi/.openclaw/workspace",
-        managedSkillsDir: "/home/pi/.openclaw/skills",
+        source: "hermes-workspace",
+        workspaceDir: "/home/pi/.hermes/workspace",
+        managedSkillsDir: "/home/pi/.hermes/skills",
         agentId: "main",
         agentName: "main",
       },
     });
 
-    expect(result.installedPath).toBe("/home/pi/.openclaw/workspace-main/skills/todo-board");
+    expect(result.installedPath).toBe("/home/pi/.hermes/workspace-main/skills/todo-board");
     expect(call).toHaveBeenCalledWith("agents.create", {
       name: expect.stringContaining("Skill Installer"),
-      workspace: "/home/pi/.openclaw/workspace-main",
+      workspace: "/home/pi/.hermes/workspace-main",
     });
   });
 });

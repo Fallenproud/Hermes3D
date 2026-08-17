@@ -11,10 +11,10 @@ describe("loadLocalGatewayDefaults with HERMES3D_GATEWAY_URL", () => {
     vi.resetModules();
   });
 
-  it("returns env-based defaults when HERMES3D_GATEWAY_URL is set and no openclaw.json exists", async () => {
+  it("returns env-based defaults when HERMES3D_GATEWAY_URL is set and no hermes.json exists", async () => {
     process.env.HERMES3D_GATEWAY_URL = "ws://my-gateway:18789";
     process.env.HERMES3D_GATEWAY_TOKEN = "my-token";
-    process.env.OPENCLAW_STATE_DIR = "/tmp/hermes3d-test-nonexistent-" + Date.now();
+    process.env.HERMES_STATE_DIR = "/tmp/hermes3d-test-nonexistent-" + Date.now();
     const { loadLocalGatewayDefaults } = await import(
       "../../src/lib/studio/settings-store"
     );
@@ -22,9 +22,9 @@ describe("loadLocalGatewayDefaults with HERMES3D_GATEWAY_URL", () => {
     expect(result).toEqual({
       url: "ws://my-gateway:18789",
       token: "my-token",
-      adapterType: "openclaw",
+      adapterType: "hermes",
       profiles: {
-        openclaw: { url: "ws://my-gateway:18789", token: "my-token" },
+        hermes: { url: "ws://my-gateway:18789", token: "my-token" },
       },
     });
   });
@@ -32,7 +32,7 @@ describe("loadLocalGatewayDefaults with HERMES3D_GATEWAY_URL", () => {
   it("returns env-based defaults with empty token when only URL is set", async () => {
     process.env.HERMES3D_GATEWAY_URL = "ws://my-gateway:18789";
     delete process.env.HERMES3D_GATEWAY_TOKEN;
-    process.env.OPENCLAW_STATE_DIR = "/tmp/hermes3d-test-nonexistent-" + Date.now();
+    process.env.HERMES_STATE_DIR = "/tmp/hermes3d-test-nonexistent-" + Date.now();
     const { loadLocalGatewayDefaults } = await import(
       "../../src/lib/studio/settings-store"
     );
@@ -40,17 +40,17 @@ describe("loadLocalGatewayDefaults with HERMES3D_GATEWAY_URL", () => {
     expect(result).toEqual({
       url: "ws://my-gateway:18789",
       token: "",
-      adapterType: "openclaw",
+      adapterType: "hermes",
       profiles: {
-        openclaw: { url: "ws://my-gateway:18789", token: "" },
+        hermes: { url: "ws://my-gateway:18789", token: "" },
       },
     });
   });
 
-  it("returns null when no env var and no openclaw.json", async () => {
+  it("returns null when no env var and no hermes.json", async () => {
     delete process.env.HERMES3D_GATEWAY_URL;
     delete process.env.HERMES3D_GATEWAY_TOKEN;
-    process.env.OPENCLAW_STATE_DIR = "/tmp/hermes3d-test-nonexistent-" + Date.now();
+    process.env.HERMES_STATE_DIR = "/tmp/hermes3d-test-nonexistent-" + Date.now();
     const { loadLocalGatewayDefaults } = await import(
       "../../src/lib/studio/settings-store"
     );
@@ -58,15 +58,15 @@ describe("loadLocalGatewayDefaults with HERMES3D_GATEWAY_URL", () => {
     expect(result).toBeNull();
   });
 
-  it("prefers env vars over openclaw.json when both exist while preserving the file-backed profile", async () => {
+  it("prefers env vars over hermes.json when both describe the Hermes profile", async () => {
     process.env.HERMES3D_GATEWAY_URL = "ws://env-gateway:18789";
     process.env.HERMES3D_GATEWAY_TOKEN = "env-token";
     process.env.HERMES3D_GATEWAY_ADAPTER_TYPE = "hermes";
 
     const stateDir = fs.mkdtempSync(path.join(os.tmpdir(), "hermes3d-gateway-defaults-"));
-    process.env.OPENCLAW_STATE_DIR = stateDir;
+    process.env.HERMES_STATE_DIR = stateDir;
     fs.writeFileSync(
-      path.join(stateDir, "openclaw.json"),
+      path.join(stateDir, "hermes.json"),
       JSON.stringify({
         gateway: {
           port: 18791,
@@ -87,7 +87,6 @@ describe("loadLocalGatewayDefaults with HERMES3D_GATEWAY_URL", () => {
       adapterType: "hermes",
       profiles: {
         hermes: { url: "ws://env-gateway:18789", token: "env-token" },
-        openclaw: { url: "ws://localhost:18791", token: "file-token" },
       },
     });
   });
@@ -96,7 +95,7 @@ describe("loadLocalGatewayDefaults with HERMES3D_GATEWAY_URL", () => {
     process.env.HERMES3D_GATEWAY_URL = "ws://my-hermes:18789";
     process.env.HERMES3D_GATEWAY_ADAPTER_TYPE = "hermes";
     delete process.env.HERMES3D_GATEWAY_TOKEN;
-    process.env.OPENCLAW_STATE_DIR = "/tmp/hermes3d-test-nonexistent-" + Date.now();
+    process.env.HERMES_STATE_DIR = "/tmp/hermes3d-test-nonexistent-" + Date.now();
     const { loadLocalGatewayDefaults } = await import(
       "../../src/lib/studio/settings-store"
     );
@@ -115,7 +114,7 @@ describe("loadLocalGatewayDefaults with HERMES3D_GATEWAY_URL", () => {
     delete process.env.HERMES3D_GATEWAY_URL;
     delete process.env.HERMES3D_GATEWAY_TOKEN;
     process.env.HERMES_ADAPTER_PORT = "19444";
-    process.env.OPENCLAW_STATE_DIR = "/tmp/hermes3d-test-nonexistent-" + Date.now();
+    process.env.HERMES_STATE_DIR = "/tmp/hermes3d-test-nonexistent-" + Date.now();
     const { loadLocalGatewayDefaults } = await import(
       "../../src/lib/studio/settings-store"
     );
@@ -130,16 +129,16 @@ describe("loadLocalGatewayDefaults with HERMES3D_GATEWAY_URL", () => {
     });
   });
 
-  it("prefers Hermes adapter defaults over file-backed OpenClaw defaults while preserving the OpenClaw profile", async () => {
+  it("prefers Hermes adapter port defaults over file-backed Hermes defaults", async () => {
     delete process.env.HERMES3D_GATEWAY_URL;
     delete process.env.HERMES3D_GATEWAY_TOKEN;
     delete process.env.HERMES3D_GATEWAY_ADAPTER_TYPE;
     process.env.HERMES_ADAPTER_PORT = "19444";
 
     const stateDir = fs.mkdtempSync(path.join(os.tmpdir(), "hermes3d-gateway-defaults-"));
-    process.env.OPENCLAW_STATE_DIR = stateDir;
+    process.env.HERMES_STATE_DIR = stateDir;
     fs.writeFileSync(
-      path.join(stateDir, "openclaw.json"),
+      path.join(stateDir, "hermes.json"),
       JSON.stringify({
         gateway: {
           port: 18789,
@@ -160,20 +159,19 @@ describe("loadLocalGatewayDefaults with HERMES3D_GATEWAY_URL", () => {
       adapterType: "hermes",
       profiles: {
         hermes: { url: "ws://localhost:19444", token: "" },
-        openclaw: { url: "ws://localhost:18789", token: "file-token" },
       },
     });
   });
 
-  it("prefers explicit env adapter defaults over file-backed OpenClaw defaults", async () => {
+  it("prefers explicit env adapter defaults over file-backed Hermes defaults", async () => {
     process.env.HERMES3D_GATEWAY_URL = "ws://env-gateway:19999";
     process.env.HERMES3D_GATEWAY_TOKEN = "env-token";
     process.env.HERMES3D_GATEWAY_ADAPTER_TYPE = "hermes";
 
     const stateDir = fs.mkdtempSync(path.join(os.tmpdir(), "hermes3d-gateway-defaults-"));
-    process.env.OPENCLAW_STATE_DIR = stateDir;
+    process.env.HERMES_STATE_DIR = stateDir;
     fs.writeFileSync(
-      path.join(stateDir, "openclaw.json"),
+      path.join(stateDir, "hermes.json"),
       JSON.stringify({
         gateway: {
           port: 18789,
@@ -193,7 +191,6 @@ describe("loadLocalGatewayDefaults with HERMES3D_GATEWAY_URL", () => {
       token: "env-token",
       adapterType: "hermes",
       profiles: {
-        openclaw: { url: "ws://localhost:18789", token: "file-token" },
         hermes: { url: "ws://env-gateway:19999", token: "env-token" },
       },
     });

@@ -1,9 +1,8 @@
 const fs = require("node:fs");
 const path = require("node:path");
-const { execFileSync } = require("node:child_process");
 const readline = require("node:readline/promises");
 
-const { resolveStudioSettingsPath } = require("../server/studio-settings");
+const { resolveStudioSettingsPath, resolveStateDir } = require("../server/studio-settings");
 
 const DEFAULT_GATEWAY_URL = "ws://127.0.0.1:18789";
 
@@ -13,14 +12,13 @@ const parseArgs = (argv) => {
   };
 };
 
-const tryReadGatewayTokenFromOpenclawCli = () => {
+const tryReadGatewayTokenFromHermesConfig = () => {
   try {
-    const raw = execFileSync("openclaw", ["config", "get", "gateway.auth.token"], {
-      encoding: "utf8",
-      stdio: ["ignore", "pipe", "ignore"],
-    });
-    const token = String(raw ?? "").trim();
-    return token || null;
+    const configPath = path.join(resolveStateDir(process.env), "hermes.json");
+    if (!fs.existsSync(configPath)) return null;
+    const parsed = JSON.parse(fs.readFileSync(configPath, "utf8"));
+    const token = parsed?.gateway?.auth?.token;
+    return typeof token === "string" && token.trim() ? token.trim() : null;
   } catch {
     return null;
   }
@@ -54,15 +52,15 @@ async function main() {
       throw new Error("Gateway URL is required.");
     }
 
-    const tokenDefault = tryReadGatewayTokenFromOpenclawCli();
+    const tokenDefault = tryReadGatewayTokenFromHermesConfig();
     const tokenPrompt = tokenDefault
-      ? "Upstream Gateway Token [detected from openclaw]: "
+      ? "Upstream Gateway Token [detected from ~/.hermes/hermes.json]: "
       : "Upstream Gateway Token: ";
     const tokenAnswer = await rl.question(tokenPrompt);
     const token = (tokenAnswer || tokenDefault || "").trim();
     if (!token) {
       throw new Error(
-        "Gateway token is required. Provide it, or install/openclaw so it can be auto-detected."
+        "Gateway token is required. Provide it, or set gateway.auth.token in ~/.hermes/hermes.json so it can be auto-detected."
       );
     }
 

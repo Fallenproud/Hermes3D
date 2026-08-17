@@ -5,7 +5,7 @@ import path from "node:path";
 
 import type { TaskBoardCard, TaskBoardSource, TaskBoardStatus } from "@/features/office/tasks/types";
 import { isTaskBoardSource, isTaskBoardStatus } from "@/features/office/tasks/types";
-import { resolveStateDir } from "@/lib/clawdbot/paths";
+import { resolveStateDir } from "@/lib/hermes/paths";
 
 export type SharedTaskHistoryEntry = {
   at: string;

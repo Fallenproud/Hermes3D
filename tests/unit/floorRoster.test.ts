@@ -47,7 +47,7 @@ describe("floorRoster", () => {
 
   it("builds loaded roster state from hydration results", () => {
     const state = buildFloorRosterState({
-      floorId: "openclaw-ground",
+      floorId: "hermes-first",
       hydratedAt: 123,
       result: {
         seeds: [makeSeed()],
@@ -57,8 +57,8 @@ describe("floorRoster", () => {
 
     expect(state).toEqual(
       expect.objectContaining({
-        floorId: "openclaw-ground",
-        provider: "openclaw",
+        floorId: "hermes-first",
+        provider: "hermes",
         status: "loaded",
         hydratedAt: 123,
         selectedAgentId: "agent-1",
@@ -69,7 +69,7 @@ describe("floorRoster", () => {
 
   it("preserves prior roster entries when building error state", () => {
     const previous = buildFloorRosterState({
-      floorId: "openclaw-ground",
+      floorId: "hermes-first",
       hydratedAt: 123,
       result: {
         seeds: [makeSeed()],
@@ -77,7 +77,7 @@ describe("floorRoster", () => {
       },
     });
     const errored = buildFloorRosterErrorState({
-      floorId: "openclaw-ground",
+      floorId: "hermes-first",
       message: "connect timeout",
       previous,
     });

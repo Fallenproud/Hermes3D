@@ -21,7 +21,7 @@ This file captures the near-term direction for Hermes3D so outside contributors 
 - Better contributor automation, release process, and publication tooling.
 - More immersive agent/system surfaces that build on the existing office intent and runtime event model.
 
-## Product Ideas To Reduce OpenClaw Dependency
+## Product Ideas To Reduce Backend Dependency
 
 - Expand the new agent wizard into reusable agent templates and presets, building on the existing playbook templates, onboarding flow, and agent creation steps.
 - Turn the current onboarding and connection experience into a fuller workspace setup wizard that validates gateway access, permissions, local-vs-remote behavior, and common integrations in one place.

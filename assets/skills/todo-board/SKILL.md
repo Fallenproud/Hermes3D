@@ -1,7 +1,7 @@
 ---
 name: todo
 description: Maintain a shared workspace TODO list with blocked tasks.
-metadata: {"openclaw":{"skillKey":"todo-board"}}
+metadata: {"hermes":{"skillKey":"todo-board"}}
 ---
 
 # TODO Board

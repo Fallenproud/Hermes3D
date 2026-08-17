@@ -17,25 +17,25 @@ describe("skills remove ssh executor", () => {
   it("removes skill files via ssh", () => {
     mockedRunSshJson.mockReturnValueOnce({
       removed: true,
-      removedPath: "/home/ubuntu/.openclaw/skills/github",
-      source: "openclaw-managed",
+      removedPath: "/home/ubuntu/.hermes/skills/github",
+      source: "hermes-managed",
     });
 
     const result = removeSkillOverSsh({
       sshTarget: "me@host",
       request: {
         skillKey: "github",
-        source: "openclaw-managed",
-        baseDir: "/home/ubuntu/.openclaw/skills/github",
-        workspaceDir: "/home/ubuntu/.openclaw/workspace-main",
-        managedSkillsDir: "/home/ubuntu/.openclaw/skills",
+        source: "hermes-managed",
+        baseDir: "/home/ubuntu/.hermes/skills/github",
+        workspaceDir: "/home/ubuntu/.hermes/workspace-main",
+        managedSkillsDir: "/home/ubuntu/.hermes/skills",
       },
     });
 
     expect(result).toEqual({
       removed: true,
-      removedPath: "/home/ubuntu/.openclaw/skills/github",
-      source: "openclaw-managed",
+      removedPath: "/home/ubuntu/.hermes/skills/github",
+      source: "hermes-managed",
     });
     expect(runSshJson).toHaveBeenCalledWith(
       expect.objectContaining({
@@ -45,10 +45,10 @@ describe("skills remove ssh executor", () => {
           "-s",
           "--",
           "github",
-          "openclaw-managed",
-          "/home/ubuntu/.openclaw/skills/github",
-          "/home/ubuntu/.openclaw/workspace-main",
-          "/home/ubuntu/.openclaw/skills",
+          "hermes-managed",
+          "/home/ubuntu/.hermes/skills/github",
+          "/home/ubuntu/.hermes/workspace-main",
+          "/home/ubuntu/.hermes/skills",
         ],
         label: "remove skill (github)",
         input: expect.stringContaining('python3 - "$1" "$2" "$3" "$4" "$5"'),

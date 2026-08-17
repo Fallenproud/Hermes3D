@@ -14,11 +14,11 @@ import {
 const makeTempDir = (name: string) => fs.mkdtempSync(path.join(os.tmpdir(), `${name}-`));
 
 describe("shared task store", () => {
-  const priorStateDir = process.env.OPENCLAW_STATE_DIR;
+  const priorStateDir = process.env.HERMES_STATE_DIR;
   let tempDir: string | null = null;
 
   afterEach(() => {
-    process.env.OPENCLAW_STATE_DIR = priorStateDir;
+    process.env.HERMES_STATE_DIR = priorStateDir;
     if (tempDir) {
       fs.rmSync(tempDir, { recursive: true, force: true });
       tempDir = null;
@@ -27,7 +27,7 @@ describe("shared task store", () => {
 
   it("creates and lists persisted tasks", () => {
     tempDir = makeTempDir("shared-task-store-create");
-    process.env.OPENCLAW_STATE_DIR = tempDir;
+    process.env.HERMES_STATE_DIR = tempDir;
 
     const created = upsertSharedTask({
       id: "task-1",
@@ -53,7 +53,7 @@ describe("shared task store", () => {
 
   it("appends history when task status changes and archives instead of deleting", () => {
     tempDir = makeTempDir("shared-task-store-history");
-    process.env.OPENCLAW_STATE_DIR = tempDir;
+    process.env.HERMES_STATE_DIR = tempDir;
 
     upsertSharedTask({
       id: "task-1",
@@ -76,7 +76,7 @@ describe("shared task store", () => {
 
   it("recovers gracefully from corrupted JSON on disk", () => {
     tempDir = makeTempDir("shared-task-store-corrupt");
-    process.env.OPENCLAW_STATE_DIR = tempDir;
+    process.env.HERMES_STATE_DIR = tempDir;
 
     upsertSharedTask({ id: "t-1", title: "Valid task", status: "todo", source: "hermes3d_manual" });
     const storePath = resolveSharedTaskStorePath();
@@ -92,7 +92,7 @@ describe("shared task store", () => {
 
   it("performs atomic writes so partial failures don't corrupt the store", () => {
     tempDir = makeTempDir("shared-task-store-atomic");
-    process.env.OPENCLAW_STATE_DIR = tempDir;
+    process.env.HERMES_STATE_DIR = tempDir;
 
     upsertSharedTask({ id: "t-1", title: "Safe task", status: "todo", source: "hermes3d_manual" });
     const storePath = resolveSharedTaskStorePath();
@@ -106,7 +106,7 @@ describe("shared task store", () => {
 
   it("coerces invalid status and source to defaults", () => {
     tempDir = makeTempDir("shared-task-store-coerce");
-    process.env.OPENCLAW_STATE_DIR = tempDir;
+    process.env.HERMES_STATE_DIR = tempDir;
 
     const task = upsertSharedTask({
       id: "t-coerce",
@@ -120,7 +120,7 @@ describe("shared task store", () => {
 
   it("truncates oversized title and description", () => {
     tempDir = makeTempDir("shared-task-store-truncate");
-    process.env.OPENCLAW_STATE_DIR = tempDir;
+    process.env.HERMES_STATE_DIR = tempDir;
 
     const longTitle = "A".repeat(1000);
     const longDesc = "B".repeat(10_000);
@@ -138,7 +138,7 @@ describe("shared task store", () => {
 
   it("returns null when archiving a non-existent task", () => {
     tempDir = makeTempDir("shared-task-store-archive-missing");
-    process.env.OPENCLAW_STATE_DIR = tempDir;
+    process.env.HERMES_STATE_DIR = tempDir;
 
     const result = archiveSharedTask("does-not-exist");
     expect(result).toBeNull();
@@ -146,7 +146,7 @@ describe("shared task store", () => {
 
   it("returns an empty list when store file does not exist", () => {
     tempDir = makeTempDir("shared-task-store-missing-file");
-    process.env.OPENCLAW_STATE_DIR = tempDir;
+    process.env.HERMES_STATE_DIR = tempDir;
 
     expect(listSharedTasks()).toEqual([]);
   });

@@ -102,7 +102,7 @@ describe("reconcileOfficeAnimationTriggerState – skillGym hold (issue #13)", (
       agentId: "skill",
       name: "Skill",
       sessionKey: "agent:skill:main",
-      lastUserMessage: "Build another OpenClaw skill.",
+      lastUserMessage: "Build another Hermes skill.",
     });
 
     const state = reconcileOfficeAnimationTriggerState({
@@ -192,7 +192,7 @@ describe("reconcileOfficeAnimationTriggerState – skillGym hold (issue #13)", (
         agentId: "skill",
         name: "Skill",
         sessionKey: "agent:skill:main",
-        lastUserMessage: "Enable a skill for OpenClaw.", // gym intent
+        lastUserMessage: "Enable a skill for Hermes.", // gym intent
       }),
       makeAgent({
         agentId: "main",

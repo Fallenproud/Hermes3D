@@ -101,7 +101,7 @@ describe("office event triggers", () => {
         agentId: "skill",
         name: "Skill",
         sessionKey: "agent:skill:main",
-        lastUserMessage: "Build another OpenClaw skill.",
+        lastUserMessage: "Build another Hermes skill.",
         status: "running",
         runId: "run-skill",
       }),

@@ -4,7 +4,6 @@ Hermes3D now treats runtime backends as named saved profiles instead of one glob
 
 ## Current Profiles
 
-- `openclaw`
 - `hermes`
 - `demo`
 - `local`
@@ -15,23 +14,11 @@ Each profile keeps its own saved URL and token in Studio settings.
 
 ## What Each Profile Means
 
-### `openclaw`
-
-The normal OpenClaw gateway flow over Studio's WebSocket bridge.
-
-This is the provider-rich path. OpenClaw already knows how to sit in front of many upstream model providers, so Hermes3D should treat it as a first-class gateway adapter rather than flattening it into `custom`.
-
-Typical URL:
-
-```text
-ws://localhost:18789
-```
-
 ### `hermes`
 
-The bundled Hermes adapter over the same gateway-shaped WebSocket flow.
+The default profile. It runs the bundled Hermes gateway adapter over Studio's WebSocket bridge.
 
-This is also a provider-aware runtime path. Hermes can own its own provider/account setup behind the gateway boundary.
+This is the provider-rich path: Hermes owns its own provider/account setup behind the gateway boundary, so Hermes3D treats it as a first-class gateway adapter rather than flattening it into `custom`.
 
 Typical URL:
 
@@ -133,7 +120,7 @@ These are not first-class connection profiles yet in this branch:
 
 Those should land as real adapters, not as buttons that pretend the HTTP runtime seam already understands provider-specific auth and event semantics.
 
-The current provider review path should borrow from existing Hermes/OpenClaw wizard flows where possible, but land as Hermes3D-native adapters instead of hard-coupling Hermes3D UI state to another project's connector code.
+The current provider review path should borrow from the existing Hermes connect wizard flow where possible, but land as Hermes3D-native adapters instead of hard-coupling Hermes3D UI state to another project's connector code.
 
 ## Why This Matters For Multi-Agent Work
 

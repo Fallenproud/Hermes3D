@@ -9,15 +9,15 @@ import { removeSkillLocally } from "@/lib/skills/remove-local";
 const mkTmpDir = () => fs.mkdtempSync(path.join(os.tmpdir(), "hermes3d-skill-remove-"));
 
 describe("skills remove local", () => {
-  const originalStateDir = process.env.OPENCLAW_STATE_DIR;
+  const originalStateDir = process.env.HERMES_STATE_DIR;
 
   afterEach(() => {
-    if (originalStateDir === undefined) delete process.env.OPENCLAW_STATE_DIR;
-    else process.env.OPENCLAW_STATE_DIR = originalStateDir;
+    if (originalStateDir === undefined) delete process.env.HERMES_STATE_DIR;
+    else process.env.HERMES_STATE_DIR = originalStateDir;
   });
 
   it("removes a workspace skill directory", () => {
-    process.env.OPENCLAW_STATE_DIR = mkTmpDir();
+    process.env.HERMES_STATE_DIR = mkTmpDir();
 
     const workspaceDir = mkTmpDir();
     const managedSkillsDir = mkTmpDir();
@@ -28,7 +28,7 @@ describe("skills remove local", () => {
 
     const result = removeSkillLocally({
       skillKey: "github",
-      source: "openclaw-workspace",
+      source: "hermes-workspace",
       baseDir: skillDir,
       workspaceDir,
       managedSkillsDir,
@@ -37,7 +37,7 @@ describe("skills remove local", () => {
     expect(result).toEqual({
       removed: true,
       removedPath: skillDir,
-      source: "openclaw-workspace",
+      source: "hermes-workspace",
     });
     expect(fs.existsSync(skillDir)).toBe(false);
   });
@@ -50,7 +50,7 @@ describe("skills remove local", () => {
     expect(() =>
       removeSkillLocally({
         skillKey: "github",
-        source: "openclaw-workspace",
+        source: "hermes-workspace",
         baseDir: outsideDir,
         workspaceDir,
         managedSkillsDir,
@@ -67,7 +67,7 @@ describe("skills remove local", () => {
     expect(() =>
       removeSkillLocally({
         skillKey: "github",
-        source: "openclaw-workspace",
+        source: "hermes-workspace",
         baseDir: workspaceSkillsRoot,
         workspaceDir,
         managedSkillsDir,
@@ -84,7 +84,7 @@ describe("skills remove local", () => {
     expect(() =>
       removeSkillLocally({
         skillKey: "tmp",
-        source: "openclaw-workspace",
+        source: "hermes-workspace",
         baseDir: nonSkillDir,
         workspaceDir,
         managedSkillsDir,

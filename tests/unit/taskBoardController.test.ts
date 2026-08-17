@@ -21,7 +21,7 @@ const makeAgent = (overrides: Partial<AgentState> = {}) =>
   }) as AgentState;
 
 describe("task board controller helpers", () => {
-  it("parses explicit OpenClaw task events", () => {
+  it("parses explicit Hermes task events", () => {
     const parsed = parseExplicitTaskEvent({
       type: "event",
       event: "task_status_changed",
@@ -87,7 +87,7 @@ describe("task board controller helpers", () => {
           channel: "telegram",
           message: {
             role: "user",
-            content: [{ type: "text", text: "Can you check the latest news on OpenClaw?" }],
+            content: [{ type: "text", text: "Can you check the latest news on Hermes?" }],
           },
         },
       },
@@ -97,11 +97,11 @@ describe("task board controller helpers", () => {
     expect(card).toEqual(
       expect.objectContaining({
         id: "chat:agent:agent-1:main:8",
-        title: "Can you check the latest news on OpenClaw?",
+        title: "Can you check the latest news on Hermes?",
         assignedAgentId: "agent-1",
         channel: "telegram",
         externalThreadId: "agent:agent-1:main",
-        source: "openclaw_event",
+        source: "hermes_event",
         isInferred: false,
       }),
     );
@@ -154,7 +154,7 @@ describe("task board controller helpers", () => {
             entryId: "user-1",
             role: "user",
             kind: "user",
-            text: "Can you check the latest news on OpenClaw?",
+            text: "Can you check the latest news on Hermes?",
             sessionKey: "agent:agent-1:main",
             runId: null,
             source: "history",
@@ -170,10 +170,10 @@ describe("task board controller helpers", () => {
     expect(card).toEqual(
       expect.objectContaining({
         id: "history:agent:agent-1:main:1",
-        title: "Can you check the latest news on OpenClaw?",
+        title: "Can you check the latest news on Hermes?",
         assignedAgentId: "agent-1",
         externalThreadId: "agent:agent-1:main",
-        source: "openclaw_event",
+        source: "hermes_event",
         isInferred: false,
       }),
     );

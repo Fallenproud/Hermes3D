@@ -202,11 +202,11 @@ describe("studio settings normalization", () => {
   it("creates default per-floor runtime state", () => {
     const normalized = normalizeStudioSettings(null);
 
-    expect(normalized.officeFloors["openclaw-ground"]).toEqual(
+    expect(normalized.officeFloors["hermes-first"]).toEqual(
       expect.objectContaining({
-        floorId: "openclaw-ground",
-        provider: "openclaw",
-        runtimeProfileId: "openclaw-default",
+        floorId: "hermes-first",
+        provider: "hermes",
+        runtimeProfileId: "hermes-default",
         gatewayUrl: null,
         status: "disconnected",
       }),
@@ -290,7 +290,7 @@ describe("studio settings normalization", () => {
               id: " task-1 ",
               title: "  Review kanban interaction  ",
               status: "review",
-              source: "openclaw_event",
+              source: "hermes_event",
               assignedAgentId: " agent-1 ",
               createdAt: "2026-03-29T10:00:00.000Z",
               updatedAt: "2026-03-29T10:05:00.000Z",
@@ -398,7 +398,7 @@ describe("studio settings normalization", () => {
           token: "",
           adapterType: "hermes",
           profiles: {
-            openclaw: { url: "ws://localhost:18789", token: "open-token" },
+            hermes: { url: "ws://localhost:18789", token: "open-token" },
             demo: { url: "ws://localhost:38789", token: "" },
           },
         },
@@ -413,7 +413,6 @@ describe("studio settings normalization", () => {
     });
     expect(resolved.profiles).toEqual(
       expect.objectContaining({
-        openclaw: { url: "ws://localhost:18789", token: "open-token" },
         hermes: { url: "ws://localhost:28789", token: "" },
         demo: { url: "ws://localhost:38789", token: "" },
       }),
@@ -447,7 +446,7 @@ describe("studio settings normalization", () => {
         lastKnownGood: {
           url: "ws://localhost:18789",
           token: "stored-token",
-          adapterType: "openclaw",
+          adapterType: "hermes",
         },
       },
     });
@@ -457,7 +456,7 @@ describe("studio settings normalization", () => {
         lastKnownGood: {
           url: "ws://localhost:18789",
           token: "",
-          adapterType: "openclaw",
+          adapterType: "hermes",
         },
       },
     });
@@ -473,7 +472,7 @@ describe("studio settings normalization", () => {
         lastKnownGood: {
           url: "ws://localhost:18789",
           token: "old-token",
-          adapterType: "openclaw",
+          adapterType: "hermes",
         },
       },
     });
@@ -483,7 +482,7 @@ describe("studio settings normalization", () => {
         lastKnownGood: {
           url: "ws://localhost:18789",
           token: "new-token",
-          adapterType: "openclaw",
+          adapterType: "hermes",
         },
       },
     });
@@ -499,7 +498,7 @@ describe("studio settings normalization", () => {
         lastKnownGood: {
           url: "ws://localhost:18789",
           token: "stored-token",
-          adapterType: "openclaw",
+          adapterType: "hermes",
         },
       },
     });
@@ -508,7 +507,7 @@ describe("studio settings normalization", () => {
       gateway: {
         lastKnownGood: {
           url: "ws://localhost:18789",
-          adapterType: "openclaw",
+          adapterType: "hermes",
         },
       },
     });

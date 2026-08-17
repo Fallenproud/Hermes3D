@@ -402,7 +402,7 @@ V1 is successful if:
 - a meeting or planning session can write structured notes to it
 - the board can link to agents, sessions, and tasks
 - users can turn whiteboard outputs into bulletin board items or task seeds
-- the system works independently of OpenClaw-specific behavior
+- the system works independently of provider-specific runtime behavior
 
 ## Future Extensions
 

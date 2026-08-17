@@ -53,9 +53,9 @@ describe("/api/gateway/media route", () => {
 
   beforeEach(() => {
     process.env = { ...ORIGINAL_ENV };
-    delete process.env.OPENCLAW_GATEWAY_SSH_TARGET;
-    delete process.env.OPENCLAW_GATEWAY_SSH_USER;
-    delete process.env.OPENCLAW_STATE_DIR;
+    delete process.env.HERMES_GATEWAY_SSH_TARGET;
+    delete process.env.HERMES_GATEWAY_SSH_USER;
+    delete process.env.HERMES_STATE_DIR;
     mockedSpawnSync.mockReset();
   });
 
@@ -69,8 +69,8 @@ describe("/api/gateway/media route", () => {
 
   it("returns binary image data when reading remote media over ssh", async () => {
     tempDir = makeTempDir("gateway-media-route-remote");
-    process.env.OPENCLAW_STATE_DIR = tempDir;
-    process.env.OPENCLAW_GATEWAY_SSH_TARGET = "me@host.test";
+    process.env.HERMES_STATE_DIR = tempDir;
+    process.env.HERMES_GATEWAY_SSH_TARGET = "me@host.test";
     writeStudioSettings(tempDir, "ws://example.test:18789");
 
     const payloadBytes = Buffer.from("fake", "utf8");
@@ -86,7 +86,7 @@ describe("/api/gateway/media route", () => {
       error: undefined,
     } as never);
 
-    const remotePath = "/home/ubuntu/.openclaw/images/pic.png";
+    const remotePath = "/home/ubuntu/.hermes/images/pic.png";
     const response = await GET(
       new Request(
         `http://localhost/api/gateway/media?path=${encodeURIComponent(remotePath)}`
@@ -127,7 +127,7 @@ describe("/api/gateway/media route", () => {
   it("rejects symlinked local media paths", async () => {
     tempDir = makeTempDir("gateway-media-route-local-symlink");
     const realHome = os.homedir();
-    const allowedRoot = path.join(realHome, ".openclaw");
+    const allowedRoot = path.join(realHome, ".hermes");
     const imagesDir = path.join(allowedRoot, "images");
     const outsideDir = path.join(tempDir, "outside");
     fs.mkdirSync(imagesDir, { recursive: true });
@@ -138,7 +138,7 @@ describe("/api/gateway/media route", () => {
     const symlinkPath = path.join(imagesDir, "linked.png");
     fs.symlinkSync(outsideFile, symlinkPath);
 
-    process.env.OPENCLAW_STATE_DIR = tempDir;
+    process.env.HERMES_STATE_DIR = tempDir;
     writeStudioSettings(tempDir, "ws://localhost:18789");
 
     const response = await GET(

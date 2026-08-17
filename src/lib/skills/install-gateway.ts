@@ -99,7 +99,7 @@ export const installPackagedSkillViaGatewayAgent = async (params: {
   if (!packagedSkill) {
     throw new Error(`Unknown packaged skill: ${packageId}`);
   }
-  if (params.request.source !== "openclaw-workspace") {
+  if (params.request.source !== "hermes-workspace") {
     throw new Error("Gateway-native packaged install currently supports workspace skills only.");
   }
 
@@ -158,7 +158,7 @@ export const installPackagedSkillViaGatewayAgent = async (params: {
     return {
       installed: true,
       installedPath: `${workspaceDir.replace(/\/+$/, "")}/skills/${packagedSkill.skillKey}`,
-      source: "openclaw-workspace",
+      source: "hermes-workspace",
       skillKey: packagedSkill.skillKey,
     };
   } finally {

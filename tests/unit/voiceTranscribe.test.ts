@@ -13,16 +13,6 @@ import { describe, expect, it, vi, beforeEach } from "vitest";
 // Module mocks — must be hoisted before the route import.
 // ---------------------------------------------------------------------------
 
-vi.mock("@/lib/openclaw/voiceTranscription", () => ({
-  transcribeVoiceWithOpenClaw: vi.fn().mockResolvedValue({
-    transcript: "hello world",
-    provider: "openai",
-    model: "whisper-1",
-    decision: { outcome: "success" },
-    ignored: false,
-  }),
-}));
-
 // ---------------------------------------------------------------------------
 // Helpers
 // ---------------------------------------------------------------------------
@@ -116,13 +106,11 @@ describe("POST /api/office/voice/transcribe — size limit enforcement (issue #7
 
   // ── No Content-Length header — handled gracefully ─────────────────────────
 
-  it("proceeds normally when Content-Length header is absent and file is within limit", async () => {
+  it("passes the size checks when Content-Length header is absent and file is within limit", async () => {
     const request = mockRequest({ audioFile: makeAudioFile(1024) });
 
     const response = await POST(request);
-    expect(response.status).toBe(200);
-    const body = await response.json();
-    expect(body.transcript).toBe("hello world");
+    expect(response.status).toBe(501);
   });
 
   it("returns 413 after buffering when Content-Length is absent but body exceeds limit", async () => {
@@ -136,19 +124,15 @@ describe("POST /api/office/voice/transcribe — size limit enforcement (issue #7
     expect(body.error).toMatch(/exceeds/i);
   });
 
-  // ── Normal happy path ─────────────────────────────────────────────────────
+  // ── No bundled transcription provider ─────────────────────────────────────
 
-  it("returns 200 with transcript for a valid upload within the size limit", async () => {
+  it("returns 501 for a valid upload because transcription is not configured", async () => {
     const request = mockRequest({ audioFile: makeAudioFile(4096) });
 
     const response = await POST(request);
-    expect(response.status).toBe(200);
+    expect(response.status).toBe(501);
     const body = await response.json();
-    expect(body).toMatchObject({
-      transcript: "hello world",
-      provider: "openai",
-      model: "whisper-1",
-    });
+    expect(body.error).toMatch(/not configured/i);
   });
 
   // ── Edge cases ────────────────────────────────────────────────────────────
@@ -178,6 +162,6 @@ describe("POST /api/office/voice/transcribe — size limit enforcement (issue #7
     });
 
     const response = await POST(request);
-    expect(response.status).toBe(200);
+    expect(response.status).toBe(501);
   });
 });

@@ -578,7 +578,7 @@ describe("createGatewayProxy", () => {
     }
   });
 
-  it("returns studio.gateway_token_missing when browser auth and host token are both missing", async () => {
+  it("forwards tokenless connects upstream so the gateway can decide", async () => {
     const upstream = new WebSocketServer({ port: 0 });
     const address = upstream.address();
     if (!address || typeof address === "string") {
@@ -587,8 +587,16 @@ describe("createGatewayProxy", () => {
     const upstreamUrl = `ws://127.0.0.1:${address.port}`;
 
     let upstreamConnectionCount = 0;
-    upstream.on("connection", () => {
-      upstreamConnectionCount += 1;
+    const upstreamConnectFrame = new Promise<Record<string, unknown>>((resolve) => {
+      upstream.on("connection", (ws) => {
+        upstreamConnectionCount += 1;
+        ws.on("message", (raw) => {
+          const parsed = JSON.parse(String(raw));
+          if (parsed?.method === "connect") {
+            resolve(parsed);
+          }
+        });
+      });
     });
 
     const { createGatewayProxy } = await import("../../server/gateway-proxy");
@@ -610,7 +618,6 @@ describe("createGatewayProxy", () => {
     const browser = new WebSocket(`ws://127.0.0.1:${proxyAddr.port}/api/gateway/ws`);
     try {
       await waitForEvent(browser, "open");
-      const closePromise = waitForEvent<[number, Buffer]>(browser, "close");
       browser.send(
         JSON.stringify({
           type: "req",
@@ -620,17 +627,8 @@ describe("createGatewayProxy", () => {
         })
       );
 
-      const [rawMessage] = await waitForEvent<[WebSocket.RawData]>(browser, "message");
-      const response = JSON.parse(String(rawMessage ?? ""));
-      expect(response).toMatchObject({
-        type: "res",
-        id: "connect-missing-token",
-        ok: false,
-        error: { code: "studio.gateway_token_missing" },
-      });
-
-      const [closeCode] = await closePromise;
-      expect(closeCode).toBe(1011);
+      const forwarded = await upstreamConnectFrame;
+      expect(forwarded).toMatchObject({ id: "connect-missing-token", method: "connect" });
       expect(upstreamConnectionCount).toBe(1);
     } finally {
       for (const client of upstream.clients) {

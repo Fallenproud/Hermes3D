@@ -1,5 +1,4 @@
 export type FloorProvider =
-  | "openclaw"
   | "hermes"
   | "paperclip"
   | "custom"
@@ -10,7 +9,6 @@ export type FloorZone = "building" | "outside";
 
 export type FloorId =
   | "lobby"
-  | "openclaw-ground"
   | "hermes-first"
   | "local-runtime"
   | "hermes3d-runtime"
@@ -44,17 +42,6 @@ export const OFFICE_FLOORS: readonly FloorDefinition[] = [
     enabled: true,
     sortOrder: 0,
     runtimeProfileId: null,
-  },
-  {
-    id: "openclaw-ground",
-    label: "OpenClaw Floor",
-    shortLabel: "OpenClaw",
-    provider: "openclaw",
-    kind: "runtime",
-    zone: "building",
-    enabled: true,
-    sortOrder: 10,
-    runtimeProfileId: "openclaw-default",
   },
   {
     id: "hermes-first",

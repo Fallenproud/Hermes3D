@@ -50,7 +50,7 @@ export async function POST(request: Request) {
     if (!officePreference.remoteOfficeEnabled) {
       return NextResponse.json({ error: "Remote office is disabled." }, { status: 400 });
     }
-    if (officePreference.remoteOfficeSourceKind !== "openclaw_gateway") {
+    if (officePreference.remoteOfficeSourceKind !== "hermes_gateway") {
       return NextResponse.json(
         { error: "Remote handoffs currently work only with the remote gateway source." },
         { status: 400 },

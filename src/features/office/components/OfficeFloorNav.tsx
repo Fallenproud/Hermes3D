@@ -25,7 +25,6 @@ type OfficeFloorNavProps = {
 
 const PROVIDER_LABEL: Record<FloorProvider, string> = {
   demo: "Demo",
-  openclaw: "OpenClaw",
   hermes: "Hermes",
   paperclip: "Paperclip",
   custom: "Custom",

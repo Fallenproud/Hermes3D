@@ -1,31 +1,40 @@
-# Hermes3D + OpenClaw + Tailscale Setup Tutorial
+# Hermes3D + Hermes + Tailscale Setup Tutorial
 
 This guide is a step-by-step runbook for the most common production-like setup:
 
-- **Machine A** runs **OpenClaw Gateway**.
+- **Machine A** runs the **Hermes backend** and the **Hermes3D gateway adapter**.
 - **Machine B** runs **Hermes3D**.
 - **Tailscale** connects both machines securely.
 
-If you follow this exactly, people should avoid the most common confusion: **Hermes3D does not install or run OpenClaw for you.**
+If you follow this exactly, people should avoid the most common confusion: **Hermes3D does not install or run your agent backend for you.**
 
 ---
 
 ## 0) Architecture and Responsibilities
 
-- **OpenClaw** is the runtime and Gateway.
+- **Hermes** is the runtime. It exposes an HTTP API (default `http://localhost:8642`).
+- **The gateway adapter** (`npm run hermes-adapter`) speaks the Hermes3D gateway WebSocket protocol on one side and calls the Hermes HTTP API on the other. It listens on `ws://localhost:18789` by default.
 - **Hermes3D** is the UI and Studio proxy.
-- Hermes3D connects to an already running OpenClaw Gateway.
-- In this tutorial, the Gateway lives on a different machine from Hermes3D.
+- Hermes3D connects to an already running gateway adapter.
+- In this tutorial, the backend and adapter live on a different machine from Hermes3D.
+
+The full chain looks like this:
+
+```text
+Browser -> Hermes3D Studio -> gateway adapter (ws) -> Hermes HTTP API
+```
 
 ---
 
 ## 1) Prerequisites
 
-### Machine A (Gateway host)
+### Machine A (backend host)
 
 - macOS, Linux, or WSL2.
 - Internet access.
-- Ability to install OpenClaw and Tailscale.
+- A working Hermes installation reachable over HTTP.
+- Node.js `20+` and npm `10+` so the bundled adapter can run.
+- Ability to install Tailscale.
 
 ### Machine B (Hermes3D host)
 
@@ -41,42 +50,56 @@ If you follow this exactly, people should avoid the most common confusion: **Her
 
 ---
 
-## 2) Install and Start OpenClaw on Machine A
+## 2) Start Hermes and the Gateway Adapter on Machine A
 
-OpenClaw official install docs are here: [Install](https://docs.openclaw.ai/install/index.md) and [Getting Started](https://docs.openclaw.ai/start/getting-started.md).
+### 2.1 Start the Hermes API server
 
-### 2.1 Install OpenClaw
+Start Hermes however your installation expects, and confirm the API answers on
+the address you plan to use. The adapter defaults to:
 
-On **Machine A**:
-
-```bash
-curl -fsSL https://openclaw.ai/install.sh | bash
+```text
+http://localhost:8642
 ```
 
-### 2.2 Run onboarding and install daemon
+If Hermes listens somewhere else, set `HERMES_API_URL` before starting the adapter.
 
-```bash
-openclaw onboard --install-daemon
+### 2.2 Configure the adapter
+
+On **Machine A**, in a Hermes3D checkout, copy `.env.example` to `.env` and set the
+Hermes values:
+
+```env
+HERMES_API_URL=http://localhost:8642
+HERMES_API_KEY=
+HERMES_ADAPTER_PORT=18789
+HERMES_MODEL=hermes
+HERMES_AGENT_NAME=Hermes
 ```
 
-### 2.3 Verify Gateway health
+### 2.3 Run the adapter
 
 ```bash
-openclaw gateway status
-openclaw status
+npm run hermes-adapter
 ```
 
-You want a healthy result such as runtime running and RPC probe ok.
+The adapter now serves the Hermes3D gateway protocol on `ws://127.0.0.1:18789`.
 
-### 2.4 Get your Gateway token
+### 2.4 Verify adapter health
 
-You will need this token in Hermes3D:
+From **Machine A**, confirm the Hermes API responds and that port `18789` is
+listening. A quick check:
 
 ```bash
-openclaw config get gateway.auth.token
+curl -sS http://localhost:8642/health
+ss -ltn | grep 18789
 ```
 
-Store it securely.
+You want a healthy Hermes API response and an adapter socket in `LISTEN` state.
+
+### 2.5 Note your gateway token
+
+If you configured a token for the adapter, keep it handy. You will paste it into
+Hermes3D in step 6. Store it securely, and do not commit it.
 
 ---
 
@@ -111,13 +134,9 @@ Without this, the machines cannot communicate over tailnet traffic.
 
 ---
 
-## 4) Expose OpenClaw Gateway Through Tailscale on Machine A
+## 4) Expose the Gateway Through Tailscale on Machine A
 
-You have two valid ways. Pick one.
-
-### Option A (simple and explicit): Tailscale Serve command
-
-On **Machine A**, keep Gateway bound locally (`127.0.0.1:18789`) and publish through Serve:
+Keep the adapter bound locally (`127.0.0.1:18789`) and publish it through Tailscale Serve:
 
 ```bash
 tailscale serve --yes --bg --https=443 http://127.0.0.1:18789
@@ -128,16 +147,6 @@ Notes:
 
 - Newer Tailscale CLI uses `--https=443`.
 - If you are on older docs/commands, you may see syntax like `--https 443`. Use `tailscale serve --help` on your installed version.
-
-### Option B (OpenClaw-managed Tailscale mode)
-
-OpenClaw can manage Tailscale mode itself:
-
-```bash
-openclaw gateway --tailscale serve
-```
-
-OpenClaw Tailscale docs: [Gateway Tailscale](https://docs.openclaw.ai/gateway/tailscale.md).
 
 ### 4.1 Confirm the public tailnet URL
 
@@ -165,40 +174,34 @@ Then open:
 
 ---
 
-## 6) Connect Hermes3D to OpenClaw
+## 6) Connect Hermes3D to Hermes
 
-In Hermes3D connection UI:
+In the Hermes3D connection UI:
 
-1. Set **Gateway URL** to:
+1. Choose **Hermes backend**.
+2. Set **Gateway URL** to:
    - `wss://<gateway-host>.<tailnet>.ts.net`
-2. Paste the token from Machine A (`openclaw config get gateway.auth.token`).
-3. Click **Connect**.
+3. Paste the gateway token from Machine A, if you configured one.
+4. Click **Connect**.
 
 Important:
 
 - Use `wss://` for Tailscale HTTPS endpoints.
-- Use `ws://localhost:18789` only when Gateway is local to the same machine as Hermes3D or when using an SSH tunnel.
+- Use `ws://localhost:18789` only when the adapter is local to the same machine as Hermes3D or when using an SSH tunnel.
 
 ---
 
-## 7) Required Device-Pairing Approval Step
+## 7) SSH Tunnel Alternative
 
-This is the step people often miss.
-
-After Hermes3D is running and tries to connect for the first time, approve pending device pairing on **Machine A**:
-
-```bash
-openclaw devices list
-openclaw devices approve --latest
-```
-
-OpenClaw devices docs: [openclaw devices](https://docs.openclaw.ai/cli/devices.md).
-
-If multiple requests are pending, approve by id instead:
+If you would rather not use Tailscale, forward the adapter port over SSH from
+**Machine B**:
 
 ```bash
-openclaw devices approve <requestId>
+ssh -L 18789:127.0.0.1:18789 user@<gateway-host>
 ```
+
+Leave that session open, then point Hermes3D at `ws://localhost:18789`. The
+tunnel makes the remote adapter look local to Studio, so no `wss://` is needed.
 
 ---
 
@@ -206,11 +209,11 @@ openclaw devices approve <requestId>
 
 Run this checklist in order:
 
-1. `openclaw gateway status` on Machine A shows healthy runtime.
-2. `tailscale status` on both machines shows connected devices in same tailnet.
-3. `tailscale serve status` on Machine A shows active Serve config for port `443` to `127.0.0.1:18789`.
-4. Hermes3D connect UI uses `wss://...ts.net` plus valid token.
-5. `openclaw devices approve --latest` has been run after first connect attempt.
+1. The Hermes API responds on Machine A at the URL in `HERMES_API_URL`.
+2. `npm run hermes-adapter` is running on Machine A and listening on `18789`.
+3. `tailscale status` on both machines shows connected devices in same tailnet.
+4. `tailscale serve status` on Machine A shows active Serve config for port `443` to `127.0.0.1:18789`.
+5. Hermes3D connect UI uses `wss://...ts.net` plus a valid token.
 6. Hermes3D UI shows gateway connected and loads agents.
 
 ---
@@ -225,16 +228,13 @@ Run this checklist in order:
 
 ### `401` or auth errors from Hermes3D
 
-- Re-copy token from Machine A:
-  - `openclaw config get gateway.auth.token`.
-- Confirm Gateway auth mode and token are current.
+- Re-copy the gateway token configured for the adapter on Machine A.
+- Confirm the adapter auth mode and token are current.
 
-### Hermes3D still cannot connect after token is correct
+### Hermes3D connects but no agents appear
 
-- Approve pending device:
-  - `openclaw devices approve --latest`.
-- Check pending requests:
-  - `openclaw devices list`.
+- Confirm the adapter can actually reach the Hermes API: check the adapter logs for HTTP errors against `HERMES_API_URL`.
+- Confirm `HERMES_API_KEY` is set if your Hermes deployment requires one.
 
 ### Tailscale URL works nowhere
 
@@ -246,31 +246,27 @@ Run this checklist in order:
   - `tailscale serve reset`.
   - `tailscale serve --yes --bg --https=443 http://127.0.0.1:18789`.
 
-### Gateway itself is unhealthy
+### The backend itself is unhealthy
 
-- Run:
-  - `openclaw doctor`.
-  - `openclaw gateway restart`.
-  - `openclaw gateway status`.
+- Restart the Hermes API server and confirm it answers directly with `curl`.
+- Restart `npm run hermes-adapter` afterwards so it reconnects cleanly.
+- Run `npm run doctor` from the Hermes3D checkout for a grouped diagnostics report.
 
 ---
 
 ## 10) Security Notes
 
-- Keep Gateway bound to loopback unless you have a deliberate reason not to.
+- Keep the adapter bound to loopback unless you have a deliberate reason not to.
 - Do not commit tokens into git or `.env` files intended for sharing.
-- Prefer Tailscale Serve over exposing raw Gateway ports publicly.
-- Treat OpenClaw device pairing approval as a security gate, not a one-time annoyance.
+- Prefer Tailscale Serve or an SSH tunnel over exposing raw gateway ports publicly.
+- Set `STUDIO_ACCESS_TOKEN` whenever Studio itself binds to anything other than localhost.
 
 ---
 
 ## References
 
-- OpenClaw install: [docs.openclaw.ai/install/index.md](https://docs.openclaw.ai/install/index.md).
-- OpenClaw getting started: [docs.openclaw.ai/start/getting-started.md](https://docs.openclaw.ai/start/getting-started.md).
-- OpenClaw gateway runbook: [docs.openclaw.ai/gateway/index.md](https://docs.openclaw.ai/gateway/index.md).
-- OpenClaw devices CLI: [docs.openclaw.ai/cli/devices.md](https://docs.openclaw.ai/cli/devices.md).
-- OpenClaw tailscale gateway mode: [docs.openclaw.ai/gateway/tailscale.md](https://docs.openclaw.ai/gateway/tailscale.md).
+- Hermes adapter setup and scope: [`docs/hermes-gateway.md`](docs/hermes-gateway.md).
+- Runtime profiles and backend selection: [`docs/runtime-profiles.md`](docs/runtime-profiles.md).
 - Tailscale Serve: [tailscale.com/kb/1312/serve](https://tailscale.com/kb/1312/serve).
 - Tailscale serve CLI: [tailscale.com/docs/reference/tailscale-cli/serve](https://tailscale.com/docs/reference/tailscale-cli/serve).
 - Tailscale device approval: [tailscale.com/kb/1099/device-approval](https://tailscale.com/kb/1099/device-approval).

@@ -2,9 +2,9 @@
 
 Keep repository instructions generic and safe for open source.
 
-This repo is a frontend for OpenClaw. Keep any OpenClaw runtime checkout separate from this repository.
+This repo is the Hermes3D frontend. It talks to the Hermes backend over the gateway WebSocket protocol and does not contain the backend itself.
 
-Do not modify the OpenClaw source code. When the user asks for changes, they are asking for changes to this app. Your solutions should be applied to this app but to understand the full context of implementing your solution, you will need to search through OpenClaw's source code.
+When the user asks for changes, they are asking for changes to this app. Apply solutions here, and treat the gateway protocol and the Hermes HTTP API as external contracts you read rather than edit.
 
 If you use local private overlay instructions, keep them outside the repository and do not commit them here.
 
@@ -14,12 +14,13 @@ Do not commit personal, environment-specific, or secret instructions to this rep
 
 ### Service overview
 
-Hermes3D is a Next.js 16 frontend (TypeScript, React 19, Three.js, Phaser) for OpenClaw. It runs a custom Node.js server (`server/index.js`) that bundles a same-origin WebSocket proxy to the upstream OpenClaw Gateway. No database or Docker is required. The only hard system dependency is Node.js 20+ with npm 10+.
+Hermes3D is a Next.js 16 frontend (TypeScript, React 19, Three.js, Phaser) for the Hermes backend. It runs a custom Node.js server (`server/index.js`) that bundles a same-origin WebSocket proxy to the upstream gateway. No database or Docker is required. The only hard system dependency is Node.js 20+ with npm 10+.
 
 ### Running the app
 
 - `npm run dev` starts the dev server on port 3000 via the custom server (`node server/index.js --dev`).
-- The app requires a running OpenClaw Gateway to show agent data. Without one, the UI loads but shows the gateway connection form. This is expected and not an error.
+- `npm run hermes-adapter` starts the bundled Hermes gateway adapter (`server/hermes-gateway-adapter.js`) on `ws://localhost:18789`. `npm run demo-gateway` starts the mock gateway instead.
+- The app requires a running gateway to show agent data. Without one, the UI loads but shows the gateway connection form. This is expected and not an error.
 - `.env` is copied from `.env.example`; see `README.md` "Configuration" for variable descriptions.
 
 ### Lint, typecheck, and tests
@@ -32,10 +33,9 @@ Hermes3D is a Next.js 16 frontend (TypeScript, React 19, Three.js, Phaser) for O
 
 ### Build
 
-- `npm run build` — Next.js production build. Expect a non-blocking warning about `Can't resolve 'openclaw'`; the `openclaw` npm package is resolved optionally at runtime and is not bundled.
+- `npm run build` — Next.js production build.
 
 ### Gotchas
 
-- The `openclaw` npm package is not a dependency of this repo. The build warning about it is harmless.
 - `npm run studio:setup` is interactive (TTY prompts) — avoid running it in non-interactive cloud environments.
 - Vitest runs in watch mode by default; always pass `--run` for CI/cloud agent use.

@@ -7,7 +7,7 @@ type PackagedSkillFile = {
 const TODO_BOARD_SKILL_MD = `---
 name: todo
 description: Maintain a shared workspace TODO list with blocked tasks.
-metadata: {"openclaw":{"skillKey":"todo-board"}}
+metadata: {"hermes":{"skillKey":"todo-board"}}
 ---
 
 # TODO Board
@@ -144,7 +144,7 @@ const TODO_BOARD_EXAMPLE_JSON = `{
 const TASK_MANAGER_SKILL_MD = `---
 name: task-manager
 description: Capture actionable user requests as persistent tasks, update task status as work progresses, and keep a shared task store in sync. Use when a user asks an agent to do work, check progress, block a task, complete a task, or manage the Kanban board.
-metadata: {"openclaw":{"skillKey":"task-manager"}}
+metadata: {"hermes":{"skillKey":"task-manager"}}
 ---
 
 # Task Manager
@@ -179,8 +179,8 @@ Also use this skill even when those exact phrases are absent if the latest user 
 
 The authoritative task file is:
 
-- \`\${OPENCLAW_STATE_DIR}/hermes3d/task-manager/tasks.json\` when \`OPENCLAW_STATE_DIR\` is set.
-- \`~/.openclaw/hermes3d/task-manager/tasks.json\` otherwise.
+- \`\${HERMES_STATE_DIR}/hermes3d/task-manager/tasks.json\` when \`HERMES_STATE_DIR\` is set.
+- \`~/.hermes/hermes3d/task-manager/tasks.json\` otherwise.
 
 Always treat that file as the shared source of truth for the Kanban board.
 
@@ -333,7 +333,7 @@ const TASK_MANAGER_EXAMPLE_JSON = `{
 const SOUNDHERMES_SKILL_MD = `---
 name: soundhermes
 description: Control Spotify playback, search music, and return shareable music links.
-metadata: {"openclaw":{"skillKey":"soundhermes"}}
+metadata: {"hermes":{"skillKey":"soundhermes"}}
 ---
 
 # SOUNDHERMES
@@ -377,9 +377,9 @@ When this skill is activated, the agent should walk to the office jukebox before
 
 ---
 
-## OpenClaw Gateway Skill Contract
+## Gateway Skill Contract
 
-> This section is for developers implementing the backend skill handler in OpenClaw.
+> This section is for developers implementing the backend skill handler.
 > The Hermes3D UI handles authentication via Spotify PKCE OAuth in the browser.
 > The gateway skill handles agent-driven requests via the \`soundhermes.*\` RPC namespace.
 

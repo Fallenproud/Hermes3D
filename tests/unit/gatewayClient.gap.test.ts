@@ -4,7 +4,7 @@ import { GatewayClient } from "@/lib/gateway/GatewayClient";
 
 let lastOpts: Record<string, unknown> | null = null;
 
-vi.mock("@/lib/gateway/openclaw/GatewayBrowserClient", () => {
+vi.mock("@/lib/gateway/protocol/GatewayBrowserClient", () => {
   class GatewayBrowserClient {
     connected = true;
     constructor(opts: Record<string, unknown>) {

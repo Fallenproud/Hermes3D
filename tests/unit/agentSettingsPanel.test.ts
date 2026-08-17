@@ -61,7 +61,7 @@ const createSkillsReport = (): SkillStatusReport => ({
     {
       name: "github",
       description: "GitHub integration",
-      source: "openclaw-workspace",
+      source: "hermes-workspace",
       bundled: false,
       filePath: "/tmp/workspace/skills/github/SKILL.md",
       baseDir: "/tmp/workspace/skills/github",
@@ -78,7 +78,7 @@ const createSkillsReport = (): SkillStatusReport => ({
     {
       name: "browser",
       description: "Browser automation",
-      source: "openclaw-bundled",
+      source: "hermes-bundled",
       bundled: true,
       filePath: "/tmp/skills/browser/SKILL.md",
       baseDir: "/tmp/skills/browser",
@@ -619,7 +619,7 @@ describe("AgentSettingsPanel", () => {
 
     expect(onRemoveSkill).toHaveBeenCalledWith({
       skillKey: "github",
-      source: "openclaw-workspace",
+      source: "hermes-workspace",
       baseDir: "/tmp/workspace/skills/github",
     });
   });
@@ -1110,7 +1110,7 @@ describe("AgentSettingsPanel", () => {
         cronDeleteBusyJobId: null,
         onRunCronJob: vi.fn(),
         onDeleteCronJob: vi.fn(),
-        adapterType: "openclaw",
+        adapterType: "hermes",
       })
     );
 
@@ -1118,7 +1118,7 @@ describe("AgentSettingsPanel", () => {
     expect(screen.getByText("Heartbeat automation controls are coming soon.")).toBeInTheDocument();
   });
 
-  it("hides_heartbeat_coming_soon_for_hermes", () => {
+  it("hides_heartbeat_coming_soon_for_non_hermes_backends", () => {
     render(
       createElement(AgentSettingsPanel, {
         agent: createAgent(),
@@ -1134,59 +1134,11 @@ describe("AgentSettingsPanel", () => {
         cronDeleteBusyJobId: null,
         onRunCronJob: vi.fn(),
         onDeleteCronJob: vi.fn(),
-        adapterType: "hermes",
+        adapterType: "demo",
       })
     );
 
     expect(screen.queryByTestId("agent-settings-heartbeat-coming-soon")).not.toBeInTheDocument();
-  });
-
-  it("shows_control_ui_section_in_advanced_mode", () => {
-    render(
-      createElement(AgentSettingsPanel, {
-        agent: createAgent(),
-        mode: "advanced",
-        onClose: vi.fn(),
-        onDelete: vi.fn(),
-        onToolCallingToggle: vi.fn(),
-        onThinkingTracesToggle: vi.fn(),
-        cronJobs: [],
-        cronLoading: false,
-        cronError: null,
-        cronRunBusyJobId: null,
-        cronDeleteBusyJobId: null,
-        onRunCronJob: vi.fn(),
-        onDeleteCronJob: vi.fn(),
-        adapterType: "openclaw",
-      })
-    );
-
-    expect(screen.getByTestId("agent-settings-control-ui")).toBeInTheDocument();
-    expect(screen.getByRole("button", { name: "Open Full Control UI" })).toBeDisabled();
-  });
-
-  it("hides_control_ui_section_for_hermes", () => {
-    render(
-      createElement(AgentSettingsPanel, {
-        agent: createAgent(),
-        mode: "advanced",
-        onClose: vi.fn(),
-        onDelete: vi.fn(),
-        onToolCallingToggle: vi.fn(),
-        onThinkingTracesToggle: vi.fn(),
-        cronJobs: [],
-        cronLoading: false,
-        cronError: null,
-        cronRunBusyJobId: null,
-        cronDeleteBusyJobId: null,
-        onRunCronJob: vi.fn(),
-        onDeleteCronJob: vi.fn(),
-        adapterType: "hermes",
-      })
-    );
-
-    expect(screen.queryByTestId("agent-settings-control-ui")).not.toBeInTheDocument();
-    expect(screen.queryByRole("button", { name: "Open Full Control UI" })).not.toBeInTheDocument();
   });
 
   it("keeps_delete_agent_action_for_hermes_in_advanced_mode", () => {
@@ -1212,27 +1164,4 @@ describe("AgentSettingsPanel", () => {
     expect(screen.getByRole("button", { name: "Delete agent" })).toBeInTheDocument();
   });
 
-  it("renders_enabled_control_ui_link_when_available", () => {
-    render(
-      createElement(AgentSettingsPanel, {
-        agent: createAgent(),
-        mode: "advanced",
-        onClose: vi.fn(),
-        onDelete: vi.fn(),
-        onToolCallingToggle: vi.fn(),
-        onThinkingTracesToggle: vi.fn(),
-        cronJobs: [],
-        cronLoading: false,
-        cronError: null,
-        cronRunBusyJobId: null,
-        cronDeleteBusyJobId: null,
-        onRunCronJob: vi.fn(),
-        onDeleteCronJob: vi.fn(),
-        controlUiUrl: "http://localhost:3000/control",
-      })
-    );
-
-    const link = screen.getByRole("link", { name: "Open Full Control UI" });
-    expect(link).toHaveAttribute("href", "http://localhost:3000/control");
-  });
 });

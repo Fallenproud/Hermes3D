@@ -257,12 +257,12 @@ describe("summarizeToolLabel", () => {
     const toolCallLine = formatToolCallMarkdown({
       id: "call_read_1",
       name: "read",
-      arguments: { file_path: "/path/to/openclaw-agent-home/README.md" },
+      arguments: { file_path: "/path/to/hermes-agent-home/README.md" },
     });
 
     const summary = summarizeToolLabel(toolCallLine);
     expect(summary.summaryText).toBe(
-      "read /path/to/openclaw-agent-home/README.md"
+      "read /path/to/hermes-agent-home/README.md"
     );
     expect(summary.inlineOnly).toBe(true);
     expect(summary.body).toBe("");

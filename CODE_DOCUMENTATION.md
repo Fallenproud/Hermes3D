@@ -6,9 +6,9 @@ Use it alongside `README.md` for setup and `ARCHITECTURE.md` for system boundari
 
 ## Repo Mental Model
 
-Hermes3D is the UI and local Studio/proxy layer around an existing OpenClaw Gateway.
+Hermes3D is the UI and local Studio/proxy layer around a running Hermes gateway.
 
-- OpenClaw owns agent execution, sessions, tools, config, and runtime events.
+- The gateway owns agent execution, sessions, tools, config, and runtime events.
 - Hermes3D owns visualization, local Studio settings, UI workflows, office rendering, and the same-origin WebSocket/API bridge.
 - When a feature needs authoritative runtime state, prefer Gateway data over local UI state.
 - When a feature is only a local preference, it usually belongs in Studio settings.
@@ -50,7 +50,8 @@ If a module is reused by more than one feature or represents a stable domain con
 Custom Studio server and WebSocket proxy.
 
 - `server/index.js` boots the app.
-- `server/gateway-proxy.js` bridges browser WebSocket traffic to the upstream OpenClaw Gateway.
+- `server/gateway-proxy.js` bridges browser WebSocket traffic to the upstream gateway.
+- `server/hermes-gateway-adapter.js` speaks the Hermes3D gateway protocol and translates it into Hermes HTTP API calls (`npm run hermes-adapter`).
 - `server/studio-settings.js` loads the local Studio gateway settings on the server side.
 
 This layer exists so gateway credentials stay server-side and browser traffic can always target the same-origin Studio server.
@@ -68,8 +69,8 @@ For architecture-sensitive changes, read the nearest unit tests before editing t
 
 Repository utilities and generated-asset workflows.
 
-- `scripts/sync-openclaw-gateway-client.ts` updates the vendored gateway client helpers.
 - `scripts/studio-setup.js` prepares common local Studio prerequisites.
+- `scripts/hermes3doctor.mjs` runs deployment diagnostics (`npm run doctor`).
 
 ## Read These First
 
@@ -91,7 +92,7 @@ If you are new to the codebase, this order gives the fastest payoff:
 At a high level:
 
 1. The browser connects to Studio at `/api/gateway/ws`.
-2. Studio proxies that connection to the upstream OpenClaw Gateway.
+2. Studio proxies that connection to the upstream gateway.
 3. `GatewayClient` receives runtime events.
 4. `src/app/office/page.tsx` installs the main runtime subscription.
 5. `gatewayRuntimeEventHandler.ts` classifies and routes runtime events.
@@ -235,7 +236,7 @@ Current `src/app/api` routes:
 - `office/github/route.ts`: GitHub-related office flow helpers.
 - `office/browser-preview/route.ts`: browser preview helpers for office experiences.
 - `office/presence/route.ts`: office presence/state helpers.
-- `office/voice/transcribe/route.ts`: voice transcription.
+- `office/voice/transcribe/route.ts`: voice transcription intake. Transcription is not bundled, so this route returns `501 Not Implemented`; wire an external provider if you need it.
 - `office/voice/reply/route.ts`: voice reply generation.
 - `office/standup/config/route.ts`: standup config persistence.
 - `office/standup/meeting/route.ts`: standup meeting state helpers.
@@ -256,7 +257,9 @@ When adding a new API route, keep it narrow and put shared business logic in `sr
 - `npm run test`: Vitest.
 - `npm run e2e`: Playwright.
 - `npm run studio:setup`: local Studio prerequisites.
-- `npm run sync:gateway-client`: sync the vendored gateway browser client.
+- `npm run hermes-adapter`: bundled Hermes gateway adapter.
+- `npm run demo-gateway`: bundled mock gateway for demo mode.
+- `npm run doctor`: deployment diagnostics.
 - `npm run smoke:dev-server`: basic dev-server smoke check.
 
 ## Testing Map
@@ -295,15 +298,15 @@ A few patterns are used repeatedly in the repo:
 - Studio settings are local and per-workspace/gateway. Use them for UI preferences, desk assignments, and connection details only.
 - Transport-specific session keys such as Telegram sessions still need to map back to the correct agent. Reuse session-key helpers instead of writing ad-hoc parsing.
 - The immersive retro office now uses procedural furniture geometry instead of bundled third-party model assets.
-- This repo is not the OpenClaw runtime. Do not modify upstream OpenClaw source code from here.
+- This repo is not the agent runtime. It only speaks to one over the gateway protocol.
 
-## When You Need Upstream OpenClaw Context
+## When You Need Backend Context
 
-Sometimes Hermes3D behavior depends on the upstream event contract or session behavior. In those cases:
+Sometimes Hermes3D behavior depends on the gateway event contract or session behavior. In those cases:
 
 1. Inspect the relevant client or gateway contract in `src/lib/gateway`.
-2. If the answer is not in this repo, inspect your separate local OpenClaw checkout.
-3. Apply changes in Hermes3D unless the user explicitly asked for upstream OpenClaw work.
+2. Reproduce the traffic against `server/hermes-gateway-adapter.js` or `npm run demo-gateway`, which are the two gateway implementations this repo controls.
+3. Apply the fix in Hermes3D. Backend behavior is a contract to adapt to, not something this repo changes.
 
 ## Documentation Philosophy
 

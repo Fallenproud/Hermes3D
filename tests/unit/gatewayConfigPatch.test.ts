@@ -18,14 +18,14 @@ describe("gateway agent helpers", () => {
           return {
             exists: true,
             hash: "hash-create-1",
-            path: "/Users/test/.openclaw/openclaw.json",
+            path: "/Users/test/.hermes/hermes.json",
             config: { agents: { list: [{ id: "agent-1", name: "Agent One" }] } },
           };
         }
         if (method === "agents.create") {
           expect(params).toEqual({
             name: "New Agent",
-            workspace: "/Users/test/.openclaw/workspace-new-agent",
+            workspace: "/Users/test/.hermes/workspace-new-agent",
           });
           return { ok: true, agentId: "new-agent", name: "New Agent", workspace: "ignored" };
         }
@@ -45,14 +45,14 @@ describe("gateway agent helpers", () => {
           return {
             exists: true,
             hash: "hash-create-slug-1",
-            path: "/Users/test/.openclaw/openclaw.json",
+            path: "/Users/test/.hermes/hermes.json",
             config: { agents: { list: [] } },
           };
         }
         if (method === "agents.create") {
           expect(params).toEqual({
             name: "My Project",
-            workspace: "/Users/test/.openclaw/workspace-my-project",
+            workspace: "/Users/test/.hermes/workspace-my-project",
           });
           return { ok: true, agentId: "my-project", name: "My Project", workspace: "ignored" };
         }
@@ -106,7 +106,7 @@ describe("gateway agent helpers", () => {
           return {
             exists: true,
             hash: "hash-create-empty-slug-1",
-            path: "/Users/test/.openclaw/openclaw.json",
+            path: "/Users/test/.hermes/hermes.json",
             config: {
               agents: { list: [] },
             },
@@ -130,7 +130,7 @@ describe("gateway agent helpers", () => {
           return {
             exists: true,
             hash: "hash-remove-1",
-            path: "/Users/test/.openclaw/openclaw.json",
+            path: "/Users/test/.hermes/hermes.json",
             config: {
               agents: {
                 defaults: {
@@ -215,7 +215,7 @@ describe("gateway agent helpers", () => {
           return {
             exists: true,
             hash: "hash-2",
-            path: "/Users/test/.openclaw/openclaw.json",
+            path: "/Users/test/.hermes/hermes.json",
             config: {
               agents: {
                 defaults: {

@@ -10,10 +10,10 @@ describe("package manifest", () => {
     const parsed = JSON.parse(fs.readFileSync(packageJsonPath, "utf8")) as {
       bin?: Record<string, unknown>;
     };
-    const hasOpenclawStudioBin = Object.prototype.hasOwnProperty.call(
+    const hasStudioBin = Object.prototype.hasOwnProperty.call(
       parsed.bin ?? {},
       "hermes3d"
     );
-    expect(hasOpenclawStudioBin).toBe(false);
+    expect(hasStudioBin).toBe(false);
   });
 });

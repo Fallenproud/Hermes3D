@@ -312,7 +312,7 @@ export function MonitorImmersiveContent({
             <span className="h-3 w-3 rounded-full bg-[#28c840]" />
           </div>
           <div className="text-[12px] font-medium text-white/65">
-            openclaw-control-center
+            hermes-control-center
           </div>
           <div className="flex items-center gap-2 text-[11px] text-white/40">
             <span>[v]</span>
@@ -330,7 +330,7 @@ export function MonitorImmersiveContent({
           </div>
           <div className="flex w-[240px] flex-col border-r border-white/6 bg-[#1f2024]">
             <div className="border-b border-white/6 px-4 py-3 text-[11px] font-semibold uppercase tracking-[0.2em] text-white/45">
-              Openclaw-Control-Center
+              Hermes-Control-Center
             </div>
             <div className="flex-1 space-y-1 px-3 py-3 font-mono text-[12px]">
               <div className="px-2 pb-1 text-white/35">src</div>

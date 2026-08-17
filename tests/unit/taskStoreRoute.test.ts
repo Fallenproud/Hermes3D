@@ -16,11 +16,11 @@ const makeRequest = (method: string, body?: unknown) =>
   });
 
 describe("task store route", () => {
-  const priorStateDir = process.env.OPENCLAW_STATE_DIR;
+  const priorStateDir = process.env.HERMES_STATE_DIR;
   let tempDir: string | null = null;
 
   afterEach(() => {
-    process.env.OPENCLAW_STATE_DIR = priorStateDir;
+    process.env.HERMES_STATE_DIR = priorStateDir;
     if (tempDir) {
       fs.rmSync(tempDir, { recursive: true, force: true });
       tempDir = null;
@@ -29,7 +29,7 @@ describe("task store route", () => {
 
   it("GET returns an empty task list by default", async () => {
     tempDir = makeTempDir("task-store-route-get");
-    process.env.OPENCLAW_STATE_DIR = tempDir;
+    process.env.HERMES_STATE_DIR = tempDir;
 
     const response = await GET();
     const body = (await response.json()) as { tasks?: unknown[] };
@@ -40,7 +40,7 @@ describe("task store route", () => {
 
   it("PUT upserts a task and DELETE archives it", async () => {
     tempDir = makeTempDir("task-store-route-put");
-    process.env.OPENCLAW_STATE_DIR = tempDir;
+    process.env.HERMES_STATE_DIR = tempDir;
 
     const putResponse = await PUT(
       makeRequest("PUT", {
@@ -74,7 +74,7 @@ describe("task store route", () => {
 
   it("PUT returns 400 for missing task payload", async () => {
     tempDir = makeTempDir("task-store-route-put-no-task");
-    process.env.OPENCLAW_STATE_DIR = tempDir;
+    process.env.HERMES_STATE_DIR = tempDir;
 
     const response = await PUT(makeRequest("PUT", { notTask: true }));
     expect(response.status).toBe(400);
@@ -84,7 +84,7 @@ describe("task store route", () => {
 
   it("PUT returns 400 for empty id or title", async () => {
     tempDir = makeTempDir("task-store-route-put-empty");
-    process.env.OPENCLAW_STATE_DIR = tempDir;
+    process.env.HERMES_STATE_DIR = tempDir;
 
     const response = await PUT(
       makeRequest("PUT", { task: { id: "", title: "Something" } })
@@ -99,7 +99,7 @@ describe("task store route", () => {
 
   it("PUT returns 400 for invalid status enum", async () => {
     tempDir = makeTempDir("task-store-route-put-bad-status");
-    process.env.OPENCLAW_STATE_DIR = tempDir;
+    process.env.HERMES_STATE_DIR = tempDir;
 
     const response = await PUT(
       makeRequest("PUT", {
@@ -113,7 +113,7 @@ describe("task store route", () => {
 
   it("PUT returns 400 for invalid source enum", async () => {
     tempDir = makeTempDir("task-store-route-put-bad-source");
-    process.env.OPENCLAW_STATE_DIR = tempDir;
+    process.env.HERMES_STATE_DIR = tempDir;
 
     const response = await PUT(
       makeRequest("PUT", {
@@ -127,7 +127,7 @@ describe("task store route", () => {
 
   it("PUT returns 400 for invalid JSON body", async () => {
     tempDir = makeTempDir("task-store-route-put-bad-json");
-    process.env.OPENCLAW_STATE_DIR = tempDir;
+    process.env.HERMES_STATE_DIR = tempDir;
 
     const response = await PUT(
       new Request("http://localhost/api/task-store", {
@@ -143,7 +143,7 @@ describe("task store route", () => {
 
   it("DELETE returns 404 for non-existent task", async () => {
     tempDir = makeTempDir("task-store-route-delete-404");
-    process.env.OPENCLAW_STATE_DIR = tempDir;
+    process.env.HERMES_STATE_DIR = tempDir;
 
     const response = await DELETE(
       makeRequest("DELETE", { id: "does-not-exist" })
@@ -155,7 +155,7 @@ describe("task store route", () => {
 
   it("DELETE returns 400 for missing id", async () => {
     tempDir = makeTempDir("task-store-route-delete-no-id");
-    process.env.OPENCLAW_STATE_DIR = tempDir;
+    process.env.HERMES_STATE_DIR = tempDir;
 
     const response = await DELETE(
       makeRequest("DELETE", { id: "" })
@@ -167,7 +167,7 @@ describe("task store route", () => {
 
   it("DELETE returns 400 for invalid JSON body", async () => {
     tempDir = makeTempDir("task-store-route-delete-bad-json");
-    process.env.OPENCLAW_STATE_DIR = tempDir;
+    process.env.HERMES_STATE_DIR = tempDir;
 
     const response = await DELETE(
       new Request("http://localhost/api/task-store", {
@@ -181,7 +181,7 @@ describe("task store route", () => {
 
   it("all responses include cache-control: no-store", async () => {
     tempDir = makeTempDir("task-store-route-cache");
-    process.env.OPENCLAW_STATE_DIR = tempDir;
+    process.env.HERMES_STATE_DIR = tempDir;
 
     const getResp = await GET();
     expect(getResp.headers.get("cache-control")).toBe("no-store");

@@ -11,7 +11,7 @@ export default defineConfig({
     reuseExistingServer: !process.env.CI,
     env: {
       ...process.env,
-      OPENCLAW_STATE_DIR: path.resolve("./tests/fixtures/openclaw-empty-state"),
+      HERMES_STATE_DIR: path.resolve("./tests/fixtures/gateway-empty-state"),
       NEXT_PUBLIC_GATEWAY_URL: "",
     },
   },

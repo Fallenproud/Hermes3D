@@ -41,7 +41,7 @@ The office should feel like a real place where work happens, not only a dashboar
 - Prefer physical metaphors that make the office easier to understand.
 - Separate real operational systems from cosmetic flavor.
 - Build useful features first, then layer on simulation and style.
-- Preserve backend neutrality so these systems work across OpenClaw, Hermes, Vera, and future providers.
+- Preserve backend neutrality so these systems work across Hermes, Vera, and future providers.
 
 ## External Validation
 
@@ -466,12 +466,12 @@ an unbounded tooling branch, treat `hermes3doctor` in two phases:
 - runtime profile awareness
 - grouped terminal output
 - JSON output
-- OpenClaw / Hermes / demo / custom provider checks
+- Hermes / demo / custom provider checks
 - tunnel, auth, and close-code remediation
 
 ### `hermes3doctor` v2
 
-- deeper OpenClaw pairing/device heuristics
+- deeper Hermes adapter/API mismatch heuristics
 - stronger Cloudflare / Tailscale / reverse-proxy fingerprints
 - richer export and issue-bundle workflows
 - in-app diagnostics surface later

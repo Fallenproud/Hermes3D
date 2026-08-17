@@ -38,7 +38,7 @@ export const buildCompanyRolePermissionsDraft = (
   fileTools: commandMode !== "off",
 });
 
-export async function runOpenClawPlanningPrompt(params: {
+export async function runHermesPlanningPrompt(params: {
   client: GatewayClientLike;
   dispatch: (action: DispatchAction) => void;
   agent: AgentState;

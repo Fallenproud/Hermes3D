@@ -189,7 +189,6 @@ function createGatewayProxy(options) {
     let upstreamReady = false;
     let upstreamUrl = "";
     let upstreamToken = "";
-    let upstreamAdapterType = "openclaw";
     let connectRequestId = null;
     let connectResponseSent = false;
     let pendingConnectFrame = null;
@@ -234,15 +233,6 @@ function createGatewayProxy(options) {
         hasNonEmptyDeviceToken(frame.params) ||
         hasCompleteDeviceAuth(frame.params);
 
-      const requiresToken = upstreamAdapterType === "openclaw";
-      if (requiresToken && !upstreamToken && !browserHasAuth) {
-        sendConnectError(
-          "studio.gateway_token_missing",
-          "Upstream gateway token is not configured on the Studio host."
-        );
-        return;
-      }
-
       const baseConnectFrame = browserHasAuth
         ? frame
         : {
@@ -253,21 +243,6 @@ function createGatewayProxy(options) {
       const connectParams = isObject(baseConnectFrame.params)
         ? { ...baseConnectFrame.params }
         : {};
-      const hasDeviceAuth = hasCompleteDeviceAuth(connectParams);
-      const client = isObject(connectParams.client) ? { ...connectParams.client } : {};
-      const clientId = typeof client.id === "string" ? client.id.trim() : "";
-
-      if (
-        upstreamAdapterType === "openclaw" &&
-        clientId === "openclaw-control-ui" &&
-        !hasDeviceAuth
-      ) {
-        client.id = "webchat-ui";
-        connectParams.client = client;
-        if (isObject(connectParams.device) && !hasCompleteDeviceAuth(connectParams)) {
-          delete connectParams.device;
-        }
-      }
 
       const connectFrame = {
         ...baseConnectFrame,
@@ -290,10 +265,6 @@ function createGatewayProxy(options) {
         const settings = await loadUpstreamSettings();
         upstreamUrl = typeof settings?.url === "string" ? settings.url.trim() : "";
         upstreamToken = typeof settings?.token === "string" ? settings.token.trim() : "";
-        upstreamAdapterType =
-          typeof settings?.adapterType === "string" && settings.adapterType.trim()
-            ? settings.adapterType.trim().toLowerCase()
-            : "openclaw";
       } catch (err) {
         logError("Failed to load upstream gateway settings.", err);
         pendingUpstreamSetupError = {

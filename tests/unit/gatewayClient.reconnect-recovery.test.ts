@@ -15,7 +15,7 @@ type MockInstance = {
 
 let instances: MockInstance[] = [];
 
-vi.mock("@/lib/gateway/openclaw/GatewayBrowserClient", () => {
+vi.mock("@/lib/gateway/protocol/GatewayBrowserClient", () => {
   class GatewayBrowserClient {
     connected = false;
     private index: number;

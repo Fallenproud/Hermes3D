@@ -1,12 +1,12 @@
-# Skills in OpenClaw + Hermes3D
+# Skills in Hermes3D
 
-This document explains skills from first principles, how they work in the OpenClaw runtime, and how Hermes3D currently exposes them in UX.
+This document explains skills from first principles, how they work in the runtime behind the gateway, and how Hermes3D currently exposes them in UX.
 
 It is intended as design context for rethinking the Skills UX.
 
 ## 1) Why skills exist (first principles)
 
-Skills are the mechanism OpenClaw uses to give agents reusable operational know-how without hardcoding that know-how into core runtime logic.
+Skills are the mechanism the runtime uses to give agents reusable operational know-how without hardcoding that know-how into core runtime logic.
 
 At a product level, a skill is:
 - A unit of capability guidance (`SKILL.md`) that teaches an agent how to perform a job.
@@ -17,14 +17,14 @@ Without skills, every workflow instruction would need to live in prompts, app co
 
 ## 2) AgentSkills.io context
 
-OpenClaw intentionally uses AgentSkills-compatible `SKILL.md` structure and semantics.
+The runtime intentionally uses AgentSkills-compatible `SKILL.md` structure and semantics.
 
 Why this matters:
 - Interoperability: skills can move between ecosystems that understand AgentSkills.
-- Community/network effects: external skill ecosystems (for OpenClaw specifically, ClawHub) can be leveraged instead of reinventing proprietary formats.
+- Community/network effects: existing external skill ecosystems can be leveraged instead of reinventing proprietary formats.
 - UX consistency: users can reason about “a skill folder with `SKILL.md` + metadata gates” instead of app-specific abstractions.
 
-OpenClaw adds product-specific metadata under `metadata.openclaw` (install specs, gating fields, primary env key, etc.) while keeping the base skill shape compatible.
+Product-specific metadata lives under `metadata.hermes` (install specs, gating fields, primary env key, etc.) while the base skill shape stays compatible.
 
 ## 3) Skill object model
 
@@ -34,13 +34,13 @@ Minimum frontmatter:
 - `name`
 - `description`
 
-Important optional fields used by OpenClaw:
-- `metadata.openclaw.always`
-- `metadata.openclaw.skillKey`
-- `metadata.openclaw.primaryEnv`
-- `metadata.openclaw.os`
-- `metadata.openclaw.requires.{bins, anyBins, env, config}`
-- `metadata.openclaw.install[]`
+Important optional fields used by the runtime:
+- `metadata.hermes.always`
+- `metadata.hermes.skillKey`
+- `metadata.hermes.primaryEnv`
+- `metadata.hermes.os`
+- `metadata.hermes.requires.{bins, anyBins, env, config}`
+- `metadata.hermes.install[]`
 - `user-invocable`
 - `disable-model-invocation`
 - `command-dispatch`, `command-tool`, `command-arg-mode`
@@ -48,20 +48,20 @@ Important optional fields used by OpenClaw:
 In runtime, this becomes a normalized `SkillEntry`:
 - Raw skill (`name`, `description`, `source`, file paths)
 - Parsed frontmatter
-- Resolved OpenClaw metadata
+- Resolved runtime metadata
 - Invocation policy flags
 
 ## 4) Where skills come from (discovery + precedence)
 
-OpenClaw merges multiple sources into one effective skill set.
+The runtime merges multiple sources into one effective skill set.
 
 Current merge precedence in code (lowest -> highest):
-1. `skills.load.extraDirs` and plugin-contributed skill dirs (`source: openclaw-extra`)
-2. Bundled skills (`openclaw-bundled`)
-3. Managed/global local skills (`~/.openclaw/skills`, `openclaw-managed`)
+1. `skills.load.extraDirs` and plugin-contributed skill dirs (`source: hermes-extra`)
+2. Bundled skills (`hermes-bundled`)
+3. Managed/global local skills (`~/.hermes/skills`, `hermes-managed`)
 4. Personal agents skills (`~/.agents/skills`, `agents-skills-personal`)
 5. Project agents skills (`<workspace>/.agents/skills`, `agents-skills-project`)
-6. Workspace skills (`<workspace>/skills`, `openclaw-workspace`)
+6. Workspace skills (`<workspace>/skills`, `hermes-workspace`)
 
 Name conflicts are resolved by “last writer wins” according to this order.
 
@@ -87,7 +87,7 @@ Status output carries:
 
 ## 6) Agent-level filtering semantics
 
-OpenClaw has a separate per-agent skill filter via `agents.list[].skills`:
+There is a separate per-agent skill filter via `agents.list[].skills`:
 - Missing `skills` key: all discovered skills are allowed
 - `skills: []`: no skills allowed
 - `skills: ["a", "b"]`: allowlist mode
@@ -118,7 +118,7 @@ Lifecycle:
 Watcher scope includes:
 - workspace `skills/`
 - workspace `.agents/skills`
-- `~/.openclaw/skills`
+- `~/.hermes/skills`
 - `~/.agents/skills`
 - configured extra dirs
 - plugin skill dirs
@@ -139,7 +139,7 @@ Invocation behavior:
 - Optional direct tool dispatch can bypass model routing.
 
 Sandbox nuance:
-- For non-`rw` sandbox workspaces, OpenClaw syncs skills into sandbox workspace (best-effort) so skill files remain accessible.
+- For non-`rw` sandbox workspaces, the runtime syncs skills into the sandbox workspace (best-effort) so skill files remain accessible.
 
 ## 9) Gateway API surface for skills
 
@@ -151,7 +151,7 @@ Core RPC methods:
 
 Important scope behavior:
 - `skills.install` is executed against the default agent workspace (not arbitrary selected agent workspace).
-- `skills.update` writes gateway config (`openclaw.json`) and is gateway-wide state mutation.
+- `skills.update` writes gateway config (`hermes.json`) and is gateway-wide state mutation.
 
 Security detail:
 - `skills.status` exposes config check satisfaction, not raw secret config values.
@@ -207,7 +207,7 @@ System setup mutations:
 - Remove files -> Studio route `/api/gateway/skills/remove` (local fs or SSH helper)
 
 Removal has strict guards:
-- Only specific sources removable (`openclaw-managed`, `openclaw-workspace`).
+- Only specific sources removable (`hermes-managed`, `hermes-workspace`).
 - Must stay inside allowed root.
 - Cannot remove skills root directory.
 - Must look like a real skill dir (`SKILL.md` exists).

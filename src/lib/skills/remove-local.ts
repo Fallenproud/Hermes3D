@@ -2,7 +2,7 @@ import fs from "node:fs";
 import os from "node:os";
 import path from "node:path";
 
-import { resolveUserPath } from "@/lib/clawdbot/paths";
+import { resolveUserPath } from "@/lib/hermes/paths";
 import type { RemovableSkillSource, SkillRemoveRequest, SkillRemoveResult } from "@/lib/skills/types";
 
 const resolveComparablePath = (input: string): string => {
@@ -40,7 +40,7 @@ const resolveAllowedRoot = (params: {
   workspaceDir: string;
   managedSkillsDir: string;
 }): string => {
-  if (params.source === "openclaw-managed") {
+  if (params.source === "hermes-managed") {
     return params.managedSkillsDir;
   }
   return path.join(params.workspaceDir, "skills");

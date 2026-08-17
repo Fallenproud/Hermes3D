@@ -1,17 +1,17 @@
 # Architecture
 
 ## Overview
-Hermes3D is a gateway-first Next.js application for visualizing and operating AI agents powered by OpenClaw using Three.JS framework.
+Hermes3D is a gateway-first Next.js application for visualizing and operating AI agents powered by the Hermes backend using the Three.JS framework.
 
-It is the UI and proxy layer, not the OpenClaw runtime itself. OpenClaw remains the system of record for agents, sessions, and execution, while Hermes3D provides:
+It is the UI and proxy layer, not the agent runtime itself. The backend remains the system of record for agents, sessions, and execution, while Hermes3D provides:
 
 - an `/agents` workspace for chat, approvals, settings, and runtime monitoring,
 - an `/office` 3D environment for spatializing agent activity,
 - an `/office/builder` surface for editing office layouts,
-- a Studio-side settings and proxy layer that connects the browser to an upstream OpenClaw gateway.
+- a Studio-side settings and proxy layer that connects the browser to an upstream Hermes gateway.
 
 ## Goals
-- Keep OpenClaw as the source of truth for runtime state.
+- Keep the backend as the source of truth for runtime state.
 - Keep local Studio state limited to UI preferences and connection settings.
 - Support both local and remote gateway setups.
 - Preserve clear boundaries between browser code, server code, and gateway-owned data.
@@ -19,7 +19,7 @@ It is the UI and proxy layer, not the OpenClaw runtime itself. OpenClaw remains 
 
 ## Non-goals
 - Multi-user or multi-tenant coordination.
-- Replacing OpenClaw as the execution engine.
+- Replacing the backend as the execution engine.
 - Moving gateway-owned agent state into local frontend storage.
 
 ## System Model
@@ -30,13 +30,13 @@ Hermes3D is split into four main parts:
 2. Studio API routes.
    Server routes handle local settings and other server-only operations.
 3. Studio WebSocket proxy.
-   A custom Node server terminates browser WebSocket connections at `/api/gateway/ws` and forwards them to the upstream OpenClaw gateway.
-4. OpenClaw gateway.
+   A custom Node server terminates browser WebSocket connections at `/api/gateway/ws` and forwards them to the upstream gateway.
+4. Hermes gateway.
    The gateway owns agent records, sessions, config, approvals, and runtime events.
 
 ## Core Boundaries
 ### 1. Gateway-owned state
-Agent records, sessions, approvals, runtime streams, and agent files belong to OpenClaw.
+Agent records, sessions, approvals, runtime streams, and agent files belong to the backend.
 
 Hermes3D may read and mutate that state through gateway APIs, but it should not create a competing local source of truth.
 
@@ -47,7 +47,7 @@ Studio stores local settings such as:
 - focused agent and related UI preferences,
 - office layout and local presentation state.
 
-These settings live under the local OpenClaw state directory and are accessed through server routes, not directly from the browser.
+These settings live under the local Hermes state directory (`~/.hermes`) and are accessed through server routes, not directly from the browser.
 
 ### 3. Client-server boundary
 Client components should not read or write the local filesystem directly.
@@ -89,7 +89,7 @@ For a practical contributor code map and extension guide, see `CODE_DOCUMENTATIO
 
 ## Design Principles
 - Gateway first.
-  If data belongs to the runtime, it should live in OpenClaw, not in a local frontend file.
+  If data belongs to the runtime, it should live in the backend, not in a local frontend file.
 - Derived UI state over duplicated state.
   The UI should derive views from gateway events and local preferences instead of creating parallel records.
 - Feature-first organization.
@@ -105,7 +105,7 @@ For a practical contributor code map and extension guide, see `CODE_DOCUMENTATIO
 - Browser traffic goes through a same-origin Studio proxy rather than directly to the gateway.
   This adds one hop, but keeps credentials server-side and improves deployment flexibility.
 - Agent configuration and files are managed through gateway APIs.
-  This avoids drift between Hermes3D and the upstream runtime.
+  This avoids drift between Hermes3D and the runtime.
 - Office behavior is driven from derived event state rather than imperative scene mutations.
   This keeps the 3D layer more reproducible and testable.
 
@@ -113,7 +113,7 @@ For a practical contributor code map and extension guide, see `CODE_DOCUMENTATIO
 - Do not store gateway tokens or secrets in client-side persistent storage.
 - Do not read or write local files from client components.
 - Do not add a second source of truth for agent records outside the gateway.
-- Do not write gateway-owned agent config directly to local OpenClaw config files.
+- Do not write gateway-owned agent config directly to local Hermes config files.
 - Do not add parallel Studio settings endpoints when `/api/studio` already owns that responsibility.
 - Do not add heavyweight abstractions without a clear need.
 
@@ -130,5 +130,5 @@ flowchart LR
   B -->|HTTP| A[Studio API Routes]
   B -->|WebSocket /api/gateway/ws| P[Studio WS Proxy]
   A -->|Read/write local settings| F[Local Filesystem]
-  P -->|WebSocket| G[OpenClaw Gateway]
+  P -->|WebSocket| G[Hermes Gateway]
 ```

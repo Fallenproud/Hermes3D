@@ -1,10 +1,6 @@
-// Adapted from `openclaw/openclaw` `ui/src/ui/gateway.ts`.
-// Source license: MIT. Last verified against OpenClaw 2026.2.12
-// (`f9e444dd56ccfc2271e8ae1729b7a14a55e1c11e`).
-// Protocol v4 support (maxProtocol: 4) added 2026-05-17 to match OpenClaw
-// ≥ 2026.3.x which bumped the required gateway protocol version from 3 to 4.
-// Update this file via `npm run sync:gateway-client -- /path/to/gateway.ts` and record
-// provenance changes in `THIRD_PARTY_CODE.md` whenever the upstream source changes.
+// Browser-side client for the Hermes3D gateway WebSocket protocol.
+// Speaks protocol v3 and v4 (maxProtocol: 4); v4 is required by gateways that
+// bumped the negotiated protocol version from 3 to 4.
 import { getPublicKeyAsync, signAsync, utils } from "@noble/ed25519";
 import { GatewayResponseError } from "@/lib/gateway/errors";
 
@@ -24,7 +20,7 @@ const gatewayBrowserDebugLog = (
 };
 
 const GATEWAY_CLIENT_NAMES = {
-  CONTROL_UI: "openclaw-control-ui",
+  CONTROL_UI: "hermes3d-control-ui",
 } as const;
 
 const GATEWAY_CLIENT_MODES = {
@@ -128,7 +124,7 @@ type DeviceAuthStore = {
   tokens: Record<string, DeviceAuthEntry>;
 };
 
-const DEVICE_AUTH_STORAGE_KEY = "openclaw.device.auth.v1";
+const DEVICE_AUTH_STORAGE_KEY = "hermes3d.device.auth.v1";
 
 function normalizeAuthScope(scope: string | undefined): string {
   const trimmed = scope?.trim();
@@ -246,7 +242,7 @@ type DeviceIdentity = {
   privateKey: string;
 };
 
-const DEVICE_IDENTITY_STORAGE_KEY = "openclaw-device-identity-v1";
+const DEVICE_IDENTITY_STORAGE_KEY = "hermes3d-device-identity-v1";
 
 export function clearGatewayBrowserSessionStorage() {
   try {
@@ -367,7 +363,7 @@ export type GatewayResponseFrame = {
 export type GatewayHelloOk = {
   type: "hello-ok";
   protocol: number;
-  adapterType?: "openclaw" | "hermes" | "demo" | "custom";
+  adapterType?: "hermes" | "demo" | "custom";
   features?: { methods?: string[]; events?: string[] };
   snapshot?: unknown;
   auth?: {
@@ -711,9 +707,8 @@ export class GatewayBrowserClient {
     // that must arrive before we transmit the connect frame. 75 ms is fine for
     // low-latency links (LAN, Tailscale) but SSH tunnels to remote hosts can
     // easily exceed that, causing the timer to fire before the nonce arrives.
-    // The result is a nonce-less device payload that the proxy treats as
-    // incomplete (hasDevice=false), downgrades to webchat-ui, and OpenClaw then
-    // rejects with a protocol-version mismatch. Use a generous fallback when we
+    // The result is a nonce-less device payload that the gateway treats as
+    // incomplete and rejects with a protocol-version mismatch. Use a generous fallback when we
     // would actually generate device auth so the nonce has time to arrive; the
     // challenge handler cancels the timer immediately when it does, so fast
     // connections are unaffected.

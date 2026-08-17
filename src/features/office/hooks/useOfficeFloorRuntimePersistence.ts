@@ -19,9 +19,9 @@ interface Params {
  * The key invariant: the patch is always written to the floor that *initiated*
  * the current gateway connection, not merely whichever floor happens to be
  * active at the time of the status update.  This prevents cross-floor
- * misattribution — e.g. switching from the OpenClaw floor to the Hermes floor
+ * misattribution — e.g. switching from the Hermes floor to the Hermes floor
  * while still connected must NOT stamp the Hermes floor as connected to the
- * OpenClaw gateway URL.
+ * Hermes gateway URL.
  */
 export function useOfficeFloorRuntimePersistence({
   activeFloorId,

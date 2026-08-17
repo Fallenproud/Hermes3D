@@ -2,8 +2,7 @@ const fs = require("node:fs");
 const os = require("node:os");
 const path = require("node:path");
 
-const LEGACY_STATE_DIRNAMES = [".clawdbot", ".moltbot"];
-const NEW_STATE_DIRNAME = ".openclaw";
+const STATE_DIRNAME = ".hermes";
 
 const resolveUserPath = (input) => {
   const trimmed = String(input ?? "").trim();
@@ -26,24 +25,9 @@ const resolveDefaultHomeDir = () => {
 };
 
 const resolveStateDir = (env = process.env) => {
-  const override =
-    env.OPENCLAW_STATE_DIR?.trim() ||
-    env.MOLTBOT_STATE_DIR?.trim() ||
-    env.CLAWDBOT_STATE_DIR?.trim();
+  const override = env.HERMES_STATE_DIR?.trim();
   if (override) return resolveUserPath(override);
-
-  const home = resolveDefaultHomeDir();
-  const newDir = path.join(home, NEW_STATE_DIRNAME);
-  const legacyDirs = LEGACY_STATE_DIRNAMES.map((dir) => path.join(home, dir));
-  try {
-    if (fs.existsSync(newDir)) return newDir;
-  } catch {}
-  for (const dir of legacyDirs) {
-    try {
-      if (fs.existsSync(dir)) return dir;
-    } catch {}
-  }
-  return newDir;
+  return path.join(resolveDefaultHomeDir(), STATE_DIRNAME);
 };
 
 const resolveStudioSettingsPath = (env = process.env) => {
@@ -57,14 +41,14 @@ const readJsonFile = (filePath) => {
 };
 
 const DEFAULT_GATEWAY_URL = "ws://localhost:18789";
-const OPENCLAW_CONFIG_FILENAME = "openclaw.json";
+const HERMES_CONFIG_FILENAME = "hermes.json";
 
 const isRecord = (value) => Boolean(value && typeof value === "object");
 
-const readOpenclawGatewayDefaults = (env = process.env) => {
+const readHermesGatewayDefaults = (env = process.env) => {
   try {
     const stateDir = resolveStateDir(env);
-    const configPath = path.join(stateDir, OPENCLAW_CONFIG_FILENAME);
+    const configPath = path.join(stateDir, HERMES_CONFIG_FILENAME);
     const parsed = readJsonFile(configPath);
     if (!isRecord(parsed)) return null;
     const gateway = isRecord(parsed.gateway) ? parsed.gateway : null;
@@ -76,7 +60,7 @@ const readOpenclawGatewayDefaults = (env = process.env) => {
     if (!token) return null;
     const url = port ? `ws://localhost:${port}` : "";
     if (!url) return null;
-    return { url, token, adapterType: "openclaw" };
+    return { url, token, adapterType: "hermes" };
   } catch {
     return null;
   }
@@ -91,9 +75,9 @@ const loadUpstreamGatewaySettings = (env = process.env) => {
   const adapterType =
     typeof gateway?.adapterType === "string" && gateway.adapterType.trim()
       ? gateway.adapterType.trim()
-      : "openclaw";
-  if (!token && adapterType === "openclaw") {
-    const defaults = readOpenclawGatewayDefaults(env);
+      : "hermes";
+  if (!token && adapterType === "hermes") {
+    const defaults = readHermesGatewayDefaults(env);
     if (defaults) {
       return {
         url: url || defaults.url,

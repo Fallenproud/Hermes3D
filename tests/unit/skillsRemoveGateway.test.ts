@@ -42,21 +42,21 @@ describe("skills remove gateway", () => {
       client: { call } as unknown as GatewayClient,
       request: {
         skillKey: "todo-board",
-        source: "openclaw-workspace",
-        baseDir: "/home/openclaw/workspace-demo/skills/todo-board",
-        workspaceDir: "/home/openclaw/workspace-demo",
-        managedSkillsDir: "/home/openclaw/.openclaw/skills",
+        source: "hermes-workspace",
+        baseDir: "/home/hermes/workspace-demo/skills/todo-board",
+        workspaceDir: "/home/hermes/workspace-demo",
+        managedSkillsDir: "/home/hermes/.hermes/skills",
       },
     });
 
     expect(result).toEqual({
       removed: true,
-      removedPath: "/home/openclaw/workspace-demo/skills/todo-board",
-      source: "openclaw-workspace",
+      removedPath: "/home/hermes/workspace-demo/skills/todo-board",
+      source: "hermes-workspace",
     });
     expect(call).toHaveBeenCalledWith("agents.create", {
       name: expect.stringContaining("Skill Remover"),
-      workspace: "/home/openclaw/workspace-demo",
+      workspace: "/home/hermes/workspace-demo",
     });
     expect(call).toHaveBeenCalledWith(
       "chat.send",
@@ -112,16 +112,16 @@ describe("skills remove gateway", () => {
       client: { call } as unknown as GatewayClient,
       request: {
         skillKey: "github",
-        source: "openclaw-managed",
-        baseDir: "/home/openclaw/.openclaw/skills/github",
-        workspaceDir: "/home/openclaw/workspace-demo",
-        managedSkillsDir: "/home/openclaw/.openclaw/skills",
+        source: "hermes-managed",
+        baseDir: "/home/hermes/.hermes/skills/github",
+        workspaceDir: "/home/hermes/workspace-demo",
+        managedSkillsDir: "/home/hermes/.hermes/skills",
       },
     });
 
     expect(call).toHaveBeenCalledWith("agents.create", {
       name: expect.stringContaining("Skill Remover"),
-      workspace: "/home/openclaw/.openclaw/skills",
+      workspace: "/home/hermes/.hermes/skills",
     });
   });
 });

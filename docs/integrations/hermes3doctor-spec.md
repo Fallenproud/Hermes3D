@@ -7,12 +7,8 @@
 Provide a single diagnostics surface for the common "Hermes3D cannot connect"
 or "runtime support looks broken" cases.
 
-The intent is similar to:
-
-- `openclaw doctor`
-- `hermes doctor`
-
-but focused on Hermes3D's integration points across providers.
+The intent is similar to a backend's own `doctor` command, but focused on
+Hermes3D's integration points across providers.
 
 ## Primary Outcomes
 
@@ -56,36 +52,24 @@ Outputs:
 - timeout / refused / bad handshake
 - wrong backend contract warning
 
-### OpenClaw Checks
-
-Checks:
-
-- OpenClaw version
-- pairing/device-approval state hints
-- common remote secure-context failures
-- common `1008`, `1011`, `1012` patterns
-
-Outputs:
-
-- version found / not found
-- device approval guidance
-- remote/Tailscale/public tunnel guidance
-
 ### Hermes Checks
 
 Checks:
 
 - Hermes adapter running
-- Hermes API reachable
+- Hermes API reachable at `HERMES_API_URL`
 - Hermes model present
 - auth key configured if required
 - adapter env loaded correctly
+- common remote secure-context failures
+- common `1008`, `1011`, `1012` close-code patterns
 
 Outputs:
 
 - adapter found / missing
 - API reachable / unreachable
 - `401` / bad model / bad URL hints
+- remote/Tailscale/public tunnel guidance
 
 ### Auth / Token Checks
 
@@ -130,15 +114,15 @@ Example:
 ```text
 Hermes3Doctor: WARN
 
-[pass] Runtime profile: OpenClaw Default
+[pass] Runtime profile: Hermes Default
 [pass] Gateway URL reachable: ws://localhost:18789
-[warn] OpenClaw version: 2026.4.2
-[fail] Device approval required for remote browser
+[warn] Hermes API slow to respond: http://localhost:8642
+[fail] Gateway token missing for a remote profile
 [warn] Secure-context mismatch for public remote setup
 
 Suggested next actions:
-1. openclaw devices approve --latest
-2. retry from an approved browser/device
+1. set the gateway token for this profile in Studio settings
+2. confirm HERMES_API_URL points at a healthy Hermes API
 3. if using a public tunnel, test local/LAN direct first
 ```
 
@@ -161,15 +145,6 @@ appropriate checks for that provider.
 
 ## Provider-Specific Guidance Rules
 
-### OpenClaw
-
-Focus on:
-
-- pairing
-- device identity
-- remote websocket setup
-- public/tunnel secure-context issues
-
 ### Hermes
 
 Focus on:
@@ -178,6 +153,8 @@ Focus on:
 - Hermes API reachability
 - model/config correctness
 - auth key presence
+- remote websocket setup
+- public/tunnel secure-context issues
 
 ### Custom Runtime
 
@@ -210,8 +187,8 @@ Add:
 
 Add:
 
-- OpenClaw checks
 - Hermes checks
+- demo gateway checks
 - custom runtime checks
 
 ### PR 4: Common Failure Classifiers
@@ -242,7 +219,7 @@ This is why it is sequenced ahead of deeper Office Systems feature work.
 - selected-profile diagnostics with optional per-profile probing
 - grouped terminal output with clear pass / warn / fail results
 - JSON output for automation and issue reporting
-- provider-aware checks for OpenClaw, Hermes, demo, and custom runtimes
+- provider-aware checks for Hermes, demo, and custom runtimes
 - common failure classification for transport and auth problems
 - concrete remediation for local, remote, tunneled, and adapter-backed setups
 
@@ -256,7 +233,7 @@ diagnosis depth and better operator ergonomics rather than broader scope.
 
 ### Higher-Signal Runtime Heuristics
 
-- deeper OpenClaw pairing and device-approval detection
+- deeper adapter/API mismatch detection for the Hermes path
 - stronger close-code interpretation from real-world failures
 - provider-specific contract validation for demo and custom runtimes
 - better wrong-model / wrong-adapter mismatch detection

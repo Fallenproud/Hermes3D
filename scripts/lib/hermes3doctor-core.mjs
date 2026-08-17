@@ -5,7 +5,6 @@ export const DOCTOR_STATUSES = {
 };
 
 const VALID_ADAPTER_TYPES = new Set([
-  "openclaw",
   "hermes",
   "demo",
   "local",
@@ -15,7 +14,6 @@ const VALID_ADAPTER_TYPES = new Set([
 const TUNNEL_HOST_PATTERN =
   /(cloudflare|trycloudflare|ngrok|tailscale|tunnel)/i;
 const DEFAULT_GATEWAY_URL_BY_ADAPTER = {
-  openclaw: "ws://localhost:18789",
   hermes: "ws://localhost:18789",
   demo: "ws://localhost:18789",
   local: "http://localhost:7770",
@@ -51,7 +49,7 @@ const formatStatusBadge = (status) => {
   }
 };
 
-export const normalizeAdapterType = (value, fallback = "openclaw") => {
+export const normalizeAdapterType = (value, fallback = "hermes") => {
   const normalized = trimString(value).toLowerCase();
   return VALID_ADAPTER_TYPES.has(normalized) ? normalized : fallback;
 };
@@ -75,7 +73,7 @@ export const resolveRuntimeContext = ({
     gateway?.adapterType ??
       upstreamGateway?.adapterType ??
       env.HERMES3D_GATEWAY_ADAPTER_TYPE,
-    "openclaw",
+    "hermes",
   );
   const rawProfiles = isRecord(gateway?.profiles) ? gateway.profiles : null;
   const profiles = {};
@@ -196,7 +194,7 @@ export const buildProfileWarnings = ({ runtimeContext }) => {
   return warnings;
 };
 
-export const buildOpenClawWarnings = ({
+export const buildRemoteGatewayWarnings = ({
   gatewayUrl,
   tokenConfigured = false,
 }) => {
@@ -223,13 +221,13 @@ export const buildOpenClawWarnings = ({
 
   if (!tokenConfigured) {
     warnings.push(
-      "Remote OpenClaw profile has no gateway token configured. Remote/browser clients often fail with pairing or approval-style errors until the device or token path is approved.",
+      "Remote gateway profile has no gateway token configured. Remote/browser clients often fail with pairing or approval-style errors until the device or token path is approved.",
     );
   }
 
   if (isTunnelBackedHostname(hostname)) {
     warnings.push(
-      "Remote OpenClaw host looks tunnel-backed. If you hit 1008/1011/1012-style failures, verify direct local or LAN access first, then check pairing/device approval and reverse-proxy websocket handling.",
+      "Remote gateway host looks tunnel-backed. If you hit 1008/1011/1012-style failures, verify direct local or LAN access first, then check pairing/device approval and reverse-proxy websocket handling.",
     );
   }
 
@@ -301,7 +299,7 @@ export const buildGatewayFailureActions = ({
 
   if (normalized.includes("1011")) {
     actions.push(
-      "If this is OpenClaw behind a reverse proxy or tunnel, verify websocket upgrade handling and compare direct local/LAN behavior before assuming the runtime itself is broken.",
+      "If the gateway sits behind a reverse proxy or tunnel, verify websocket upgrade handling and compare direct local/LAN behavior before assuming the runtime itself is broken.",
     );
   }
 
@@ -317,7 +315,7 @@ export const buildGatewayFailureActions = ({
     normalized.includes("approve")
   ) {
     actions.push(
-      "For OpenClaw, check pending device/browser approval with `openclaw devices list` and approve the request before retrying the remote browser session.",
+      "Check whether the gateway is holding a pending device/browser approval and approve the request before retrying the remote browser session.",
     );
   }
 
@@ -339,7 +337,7 @@ export const buildGatewayFailureActions = ({
 
   if (isTailscale) {
     actions.push(
-      "For Tailnet-hosted OpenClaw, test the same gateway directly on local/LAN first, then compare against the Tailnet URL so pairing/proxy issues do not get conflated.",
+      "For a Tailnet-hosted gateway, test it directly on local/LAN first, then compare against the Tailnet URL so pairing/proxy issues do not get conflated.",
     );
   }
 
@@ -441,11 +439,6 @@ export const shouldRunHermesChecks = ({ runtimeContext, env = process.env }) =>
   Boolean(
     trimString(env.HERMES_API_URL) || trimString(env.HERMES_ADAPTER_PORT),
   );
-
-export const shouldRunOpenClawChecks = ({
-  runtimeContext,
-  openclawConfigExists = false,
-}) => runtimeContext.adapterType === "openclaw" || openclawConfigExists;
 
 export const shouldRunDemoChecks = ({ runtimeContext, env = process.env }) =>
   runtimeContext.adapterType === "demo" ||

@@ -25,8 +25,8 @@ describe("skills gateway client", () => {
       call: vi.fn(async (method: string, params?: Record<string, unknown>) => {
         if (method === "skills.status") {
           return {
-            workspaceDir: "/home/pi/.openclaw/workspace",
-            managedSkillsDir: "/home/pi/.openclaw/skills",
+            workspaceDir: "/home/pi/.hermes/workspace",
+            managedSkillsDir: "/home/pi/.hermes/skills",
             skills: [],
           };
         }
@@ -36,11 +36,11 @@ describe("skills gateway client", () => {
             name: "IDENTITY.md",
           });
           return {
-            workspace: "/home/pi/.openclaw/workspace-main",
+            workspace: "/home/pi/.hermes/workspace-main",
             file: {
               missing: false,
               content: "# IDENTITY",
-              path: "/home/pi/.openclaw/workspace-main/IDENTITY.md",
+              path: "/home/pi/.hermes/workspace-main/IDENTITY.md",
             },
           };
         }
@@ -50,7 +50,7 @@ describe("skills gateway client", () => {
 
     const result = await loadAgentSkillStatus(client, "main");
 
-    expect(result.workspaceDir).toBe("/home/pi/.openclaw/workspace-main");
+    expect(result.workspaceDir).toBe("/home/pi/.hermes/workspace-main");
     expect(client.call).toHaveBeenNthCalledWith(1, "skills.status", { agentId: "main" });
     expect(client.call).toHaveBeenNthCalledWith(2, "agents.files.get", {
       agentId: "main",
@@ -63,18 +63,18 @@ describe("skills gateway client", () => {
       call: vi.fn(async (method: string) => {
         if (method === "skills.status") {
           return {
-            workspaceDir: "/home/pi/.openclaw/workspace",
-            managedSkillsDir: "/home/pi/.openclaw/skills",
+            workspaceDir: "/home/pi/.hermes/workspace",
+            managedSkillsDir: "/home/pi/.hermes/skills",
             skills: [],
           };
         }
         if (method === "agents.files.get") {
           return {
-            workspace: "/home/pi/.openclaw/workspace",
+            workspace: "/home/pi/.hermes/workspace",
             file: {
               missing: false,
               content: "# IDENTITY",
-              path: "/home/pi/.openclaw/workspace-main/IDENTITY.md",
+              path: "/home/pi/.hermes/workspace-main/IDENTITY.md",
             },
           };
         }
@@ -84,7 +84,7 @@ describe("skills gateway client", () => {
 
     const result = await loadAgentSkillStatus(client, "main");
 
-    expect(result.workspaceDir).toBe("/home/pi/.openclaw/workspace-main");
+    expect(result.workspaceDir).toBe("/home/pi/.hermes/workspace-main");
   });
 
   it("fails fast when agent id is empty", async () => {

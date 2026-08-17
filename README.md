@@ -11,7 +11,6 @@
 <p align="center">
   <a href="https://github.com/iamlukethedev/Hermes3D/actions/workflows/docker-publish.yml?query=branch%3Amain"><img src="https://img.shields.io/github/actions/workflow/status/iamlukethedev/Hermes3D/docker-publish.yml?branch=main&style=for-the-badge" alt="CI status"></a>
   <a href="https://github.com/iamlukethedev/Hermes3D/releases"><img src="https://img.shields.io/github/v/release/iamlukethedev/Hermes3D?include_prereleases&style=for-the-badge" alt="GitHub release"></a>
-  <a href="https://discord.gg/UzwNn5Zkhr"><img src="https://img.shields.io/discord/1456350064065904867?label=Discord&logo=discord&logoColor=white&color=5865F2&style=for-the-badge" alt="Discord"></a>
   <a href="https://x.com/iamlukethedev"><img src="https://img.shields.io/badge/Follow-%40iamlukethedev-000000?style=for-the-badge&logo=x&logoColor=white" alt="Follow on X"></a>
   <a href="LICENSE"><img src="https://img.shields.io/badge/License-MIT-blue.svg?style=for-the-badge" alt="MIT License"></a>
 </p>
@@ -21,11 +20,11 @@ Instead of watching automation through dashboards and logs, you walk through a l
 
 If you want a personal, self-hosted workspace that turns your AI workforce into something you can actually _see_, this is it.
 
-Supported runtimes include: OpenClaw Gateway, Hermes, a direct HTTP `custom` runtime provider for orchestrator-backed stacks, and a built-in demo gateway for office exploration without a real agent framework.
+Supported runtimes include: Hermes through the bundled gateway adapter, a direct HTTP `custom` runtime provider for orchestrator-backed stacks, and a built-in demo gateway for office exploration without a real agent framework.
 
-[Repository](https://github.com/iamlukethedev/Hermes3D) · [Vision](VISION.md) · [Architecture](ARCHITECTURE.md) · [Tutorial](TUTORIAL.md) · [Getting Started](#quick-start) · [Runtime Profiles](docs/runtime-profiles.md) · [Multi-Agent Beta](docs/multi-agent-beta.md) · [Contributing](CONTRIBUTING.md) · [Security](SECURITY.md) · [Discord](https://discord.gg/UzwNn5Zkhr)
+[Repository](https://github.com/iamlukethedev/Hermes3D) · [Vision](VISION.md) · [Architecture](ARCHITECTURE.md) · [Tutorial](TUTORIAL.md) · [Getting Started](#quick-start) · [Runtime Profiles](docs/runtime-profiles.md) · [Multi-Agent Beta](docs/multi-agent-beta.md) · [Contributing](CONTRIBUTING.md) · [Security](SECURITY.md)
 
-> **Unofficial project.** Hermes3D is an independent, community-driven project and is not affiliated with, endorsed by, or maintained by the OpenClaw team. OpenClaw is a separate project, and this repository is not the official OpenClaw repository.
+> **Unofficial project.** Hermes3D is an independent, community-driven frontend. It is not affiliated with, endorsed by, or maintained by the teams behind the agent backends it connects to.
 
 Built and maintained by **LukeTheDev**. Follow on X: [@iamlukethedev](https://x.com/iamlukethedev).
 
@@ -44,8 +43,7 @@ Hermes3D is the visualization and interaction layer.
 
 Today it can sit on top of:
 
-- OpenClaw through the existing gateway flow
-- Hermes through the bundled WebSocket adapter
+- Hermes through the bundled WebSocket gateway adapter
 - a direct HTTP `custom` runtime provider for orchestrator-backed stacks
 - a built-in demo gateway for office exploration without a real agent framework
 
@@ -80,7 +78,7 @@ The current app already includes a substantial Hermes3D surface:
 - A 3D retro office with desks, rooms, navigation, animations, and event-driven activity cues.
 - Immersive operational spaces for standups, GitHub review flows, analytics, and system monitoring.
 - Local Studio persistence for gateway connection details, focused-agent preferences, desk assignments, office state, and related UI settings.
-- A custom same-origin WebSocket proxy so the browser talks to Studio, and Studio talks to the upstream OpenClaw Gateway.
+- A custom same-origin WebSocket proxy so the browser talks to Studio, and Studio talks to the upstream gateway.
 
 ## Quick Start
 
@@ -89,16 +87,15 @@ Requirements:
 - Node.js 20+ recommended.
 - npm 10+ recommended.
 - One of:
-  - a working OpenClaw installation with a reachable Gateway URL and token
-  - Hermes with the bundled adapter
+  - a running Hermes API server plus the bundled gateway adapter
   - the built-in demo gateway for local exploration
 
 Prerequisite:
 
-- Hermes3D does not install or build OpenClaw or Hermes for you.
+- Hermes3D does not install or build Hermes for you.
 - Before starting Hermes3D against a real backend, make sure your chosen runtime is already running and that you know the gateway URL and token Studio should use.
 - For a no-framework local office demo, run the bundled demo gateway instead.
-- If you need a full cross-machine setup guide (OpenClaw + Tailscale + Hermes3D), follow [`TUTORIAL.md`](TUTORIAL.md).
+- If you need a full cross-machine setup guide (Hermes + Tailscale + Hermes3D), follow [`TUTORIAL.md`](TUTORIAL.md).
 
 Run from source:
 
@@ -111,7 +108,7 @@ npm run dev
 ```
 
 Then open `http://localhost:3000` and configure the gateway URL and token in Studio.
-Studio now also persists the selected backend mode (`OpenClaw`, `Hermes`, `Demo`, `Local`, `Hermes3D`, or `Custom`) and
+Studio now also persists the selected backend mode (`Hermes`, `Demo`, `Local`, `Hermes3D`, or `Custom`) and
 shows the active backend reported by the connected gateway.
 
 ### Runtime profiles
@@ -145,29 +142,13 @@ Current direct-runtime expectations:
 The browser does not call that runtime directly. Hermes3D proxies the
 `custom` provider through its own same-origin route at
 `/api/runtime/custom`, which avoids browser-side CORS problems and keeps
-the provider transport separate from the OpenClaw/Hermes gateway path.
-
-### Demo mode
-
-If you only want to see the office and agent interactions without installing OpenClaw or Hermes:
-
-```bash
-npm run demo-gateway
-npm run dev
-```
-
-Then connect Studio to:
-
-```text
-ws://localhost:18789
-```
-
-This starts a mock local gateway with demo agents, streaming chat, session previews, and office presence.
-In the connect screen, choose `Demo backend`, then connect.
+the provider transport separate from the Hermes gateway path.
 
 ### Hermes adapter
 
-If you want to use Hermes instead of OpenClaw:
+Hermes is the default backend. It is reached through the bundled gateway
+adapter, which speaks the Hermes3D gateway WebSocket protocol on one side
+and the Hermes HTTP API (`http://localhost:8642` by default) on the other:
 
 ```bash
 npm run hermes-adapter
@@ -184,12 +165,30 @@ ws://localhost:18789
 
 In the connect screen, choose `Hermes backend`, then connect.
 
+### Demo mode
+
+If you only want to see the office and agent interactions without installing Hermes:
+
+```bash
+npm run demo-gateway
+npm run dev
+```
+
+Then connect Studio to:
+
+```text
+ws://localhost:18789
+```
+
+This starts a mock local gateway with demo agents, streaming chat, session previews, and office presence.
+In the connect screen, choose `Demo backend`, then connect.
+
 ## How It Connects
 
 Hermes3D uses two separate network hops:
 
 1. Browser -> Studio over HTTP and a same-origin WebSocket at `/api/gateway/ws`.
-2. Studio -> OpenClaw Gateway over a second WebSocket opened by the Studio server.
+2. Studio -> the gateway over a second WebSocket opened by the Studio server.
 
 That means `ws://localhost:18789` always refers to the gateway reachable from the Studio host, not necessarily from the browser device.
 
@@ -201,7 +200,7 @@ This design keeps gateway settings persisted on the Studio host and lets Studio 
 
 1. Start Studio with `npm run dev`.
 2. Open `http://localhost:3000`.
-3. Use `ws://localhost:18789` plus your OpenClaw gateway token.
+3. Use `ws://localhost:18789` plus your gateway token.
 
 ### Gateway remote, Studio local
 
@@ -229,11 +228,7 @@ Alternative with SSH:
 1. Start Studio with `HOST=0.0.0.0` (or a specific LAN/Tailscale host).
 2. Set `STUDIO_ACCESS_TOKEN` before exposing Studio beyond localhost.
 3. Open Hermes3D from the LAN/Tailscale address instead of `localhost`.
-4. If you are connecting to a remote OpenClaw gateway, remember device approval is per browser/device. A new browser may still require:
-
-```bash
-openclaw devices approve --latest
-```
+4. If you are connecting to a remote gateway, make sure that gateway accepts connections from the Studio host and that the token you configured is the one it expects.
 
 ## Tech Stack
 
@@ -247,8 +242,8 @@ openclaw devices approve --latest
 
 Important runtime paths:
 
-- OpenClaw config: `~/.openclaw/openclaw.json`
-- Studio settings: `~/.openclaw/hermes3d/settings.json`
+- Hermes config: `~/.hermes/hermes.json`
+- Studio settings: `~/.hermes/hermes3d/settings.json`
 
 Common environment variables:
 
@@ -258,11 +253,12 @@ Common environment variables:
 - `CUSTOM_RUNTIME_ALLOWLIST` restricts which hosts `/api/runtime/custom` may fetch. If unset, it falls back to `UPSTREAM_ALLOWLIST`.
 - `NEXT_PUBLIC_GATEWAY_URL` provides the default upstream gateway URL when Studio settings are empty. **Note:** this is a build-time variable — changes require `npm run build` to take effect.
 - `HERMES3D_GATEWAY_URL` and `HERMES3D_GATEWAY_TOKEN` provide a runtime alternative to `NEXT_PUBLIC_GATEWAY_URL` that takes effect on server restart without a rebuild.
-- `HERMES3D_GATEWAY_ADAPTER_TYPE` can pair with `HERMES3D_GATEWAY_URL` to mark those runtime defaults as `openclaw`, `hermes`, `demo`, `local`, `hermes3d`, or `custom`.
+- `HERMES3D_GATEWAY_ADAPTER_TYPE` can pair with `HERMES3D_GATEWAY_URL` to mark those runtime defaults as `hermes`, `demo`, `local`, `hermes3d`, or `custom`.
 - If `HERMES3D_GATEWAY_URL` is not set, Studio can still surface local Hermes or demo adapter defaults from `HERMES_ADAPTER_PORT` / `DEMO_ADAPTER_PORT`.
-- OpenClaw file defaults still come from `~/.openclaw/openclaw.json` when present.
-- `OPENCLAW_STATE_DIR` and `OPENCLAW_CONFIG_PATH` override the default OpenClaw paths.
-- `OPENCLAW_GATEWAY_SSH_TARGET`, `OPENCLAW_GATEWAY_SSH_USER`, `OPENCLAW_GATEWAY_SSH_PORT`, and `OPENCLAW_GATEWAY_SSH_STRICT_HOST_KEY_CHECKING` support advanced gateway-host operations over SSH when needed.
+- `HERMES_API_URL` points the gateway adapter at the Hermes HTTP API. It defaults to `http://localhost:8642`.
+- Hermes file defaults come from `~/.hermes/hermes.json` when present.
+- `HERMES_STATE_DIR` and `HERMES_CONFIG_PATH` override the default Hermes paths.
+- `HERMES_GATEWAY_SSH_TARGET`, `HERMES_GATEWAY_SSH_USER`, `HERMES_GATEWAY_SSH_PORT`, and `HERMES_GATEWAY_SSH_STRICT_HOST_KEY_CHECKING` support advanced gateway-host operations over SSH when needed.
 - `ELEVENLABS_API_KEY`, `ELEVENLABS_VOICE_ID`, and `ELEVENLABS_MODEL_ID` enable voice reply integration.
 
 See [`.env.example`](.env.example) for the full local development template.
@@ -285,7 +281,7 @@ See [`.env.example`](.env.example) for the full local development template.
 
 - [`VISION.md`](VISION.md): project direction and long-term guardrails.
 - [`ARCHITECTURE.md`](ARCHITECTURE.md): system boundaries, data flow, and major trade-offs.
-- [`TUTORIAL.md`](TUTORIAL.md): detailed step-by-step setup for OpenClaw + Tailscale + Hermes3D.
+- [`TUTORIAL.md`](TUTORIAL.md): detailed step-by-step setup for Hermes + Tailscale + Hermes3D.
 - [`docs/multi-agent-beta.md`](docs/multi-agent-beta.md): remote office beta setup, connection modes, and limitations.
 - [`docs/runtime-profiles.md`](docs/runtime-profiles.md): saved backend/runtime profiles and the current HTTP runtime seam.
 - [`CODE_DOCUMENTATION.md`](CODE_DOCUMENTATION.md): practical code map, extension points, and contributor onboarding order.
@@ -293,13 +289,14 @@ See [`.env.example`](.env.example) for the full local development template.
 - [`SUPPORT.md`](SUPPORT.md): where to ask for help and how to route reports.
 - [`ROADMAP.md`](ROADMAP.md): near-term priorities and contributor-friendly work areas.
 - [`docs/pi-chat-streaming.md`](docs/pi-chat-streaming.md): gateway runtime streaming and transcript rendering.
-- [`docs/permissions-sandboxing.md`](docs/permissions-sandboxing.md): Studio permissions and OpenClaw behavior.
+- [`docs/permissions-sandboxing.md`](docs/permissions-sandboxing.md): Studio permissions and gateway-side sandbox behavior.
 - [`docs/hermes-gateway.md`](docs/hermes-gateway.md): Hermes adapter setup, capabilities, and current limitations.
 
 ## Current Limitations
 
 - The immersive retro office (`/office`) and the Phaser builder (`/office/builder`) are related but still separate stacks.
 - The app keeps gateway secrets out of browser persistent storage, but the current connection flow still loads the upstream URL/token into browser memory at runtime.
+- Voice transcription is not bundled. `/api/office/voice/transcribe` returns `501 Not Implemented`, so voice notes must be transcribed by an external provider before they reach the office.
 - Local Spotify auth for `SOUNDHERMES` currently stores an access token only. Refresh-token handling is not implemented yet, so local Spotify auth may need to be repeated after the token expires.
 
 ## Troubleshooting
@@ -308,7 +305,7 @@ If the UI loads but Connect fails, the problem is usually on the Studio -> Gatew
 
 - Confirm the upstream URL and token in Studio settings.
 - `EPROTO` or `wrong version number` usually means `wss://` was used against a non-TLS endpoint.
-- `INVALID_REQUEST` errors mentioning `minProtocol` or `maxProtocol` usually mean the gateway is too old for Hermes3D protocol v3. Upgrade OpenClaw, use the Hermes adapter, or run `npm run demo-gateway`.
+- `INVALID_REQUEST` errors mentioning `minProtocol` or `maxProtocol` usually mean the gateway is too old for Hermes3D protocol v3. Update the gateway you are connecting to, run the bundled Hermes adapter, or run `npm run demo-gateway`.
 - `401 Studio access token required` usually means `STUDIO_ACCESS_TOKEN` is enabled and the request is missing the expected `studio_access` cookie.
 - If `/api/runtime/custom` returns a blocked-host error in production, set `CUSTOM_RUNTIME_ALLOWLIST` or include the runtime host in `UPSTREAM_ALLOWLIST`.
 - Helpful proxy error codes include `studio.gateway_url_missing`, `studio.gateway_token_missing`, `studio.upstream_error`, and `studio.upstream_closed`.
@@ -341,12 +338,12 @@ If you use other advanced gateway-host operations over SSH:
 - Windows: enable the `OpenSSH Server` optional feature, start the `sshd` service, and allow it through the firewall.
 - Linux: make sure `sshd` is installed, running, and reachable from the Studio machine.
 
-For first-time SSH connections, Hermes3D uses `StrictHostKeyChecking=accept-new` by default so a new host key can be trusted automatically. If you need stricter behavior, set `OPENCLAW_GATEWAY_SSH_STRICT_HOST_KEY_CHECKING=yes`, or set it to `no` only if you explicitly want to skip host key checks.
+For first-time SSH connections, Hermes3D uses `StrictHostKeyChecking=accept-new` by default so a new host key can be trusted automatically. If you need stricter behavior, set `HERMES_GATEWAY_SSH_STRICT_HOST_KEY_CHECKING=yes`, or set it to `no` only if you explicitly want to skip host key checks.
 
 ## Contributing
 
 Keep pull requests focused, run `npm run lint`, `npm run typecheck`, and `npm run test` before opening a PR, and update docs when behavior or architecture changes.
 
-Shared editing expectations for this repository are described in [`CONTRIBUTING.md`](CONTRIBUTING.md) and [`AGENTS.md`](AGENTS.md), including the Hermes3D-vs-OpenClaw boundary, code placement conventions, office-stack distinctions, and documentation/test update expectations.
+Shared editing expectations for this repository are described in [`CONTRIBUTING.md`](CONTRIBUTING.md) and [`AGENTS.md`](AGENTS.md), including the boundary between Hermes3D and the backend it connects to, code placement conventions, office-stack distinctions, and documentation/test update expectations.
 
-Community expectations live in [`CODE_OF_CONDUCT.md`](CODE_OF_CONDUCT.md). Security reporting instructions live in [`SECURITY.md`](SECURITY.md).
+Community expectations live in [`CODE_OF_CONDUCT.MD`](CODE_OF_CONDUCT.MD). Security reporting instructions live in [`SECURITY.md`](SECURITY.md).

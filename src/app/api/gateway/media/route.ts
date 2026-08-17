@@ -53,7 +53,7 @@ const resolveAndValidateLocalMediaPath = (raw: string): { resolved: string; mime
 
   const resolved = path.resolve(expanded);
 
-  const allowedRoot = path.join(os.homedir(), ".openclaw");
+  const allowedRoot = path.join(os.homedir(), ".hermes");
   const allowedPrefix = `${allowedRoot}${path.sep}`;
   if (!(resolved === allowedRoot || resolved.startsWith(allowedPrefix))) {
     throw new Error(`Refusing to read media outside ${allowedRoot}`);
@@ -75,15 +75,15 @@ const validateRemoteMediaPath = (raw: string): { remotePath: string; mime: strin
     throw new Error("path must be absolute or start with ~/");
   }
 
-  // Remote side enforces ~/.openclaw; this guard lets Studio on macOS request
-  // /home/ubuntu/.openclaw/... without tripping local homedir checks.
+  // Remote side enforces ~/.hermes; this guard lets Studio on macOS request
+  // /home/ubuntu/.hermes/... without tripping local homedir checks.
   const normalized = trimmed.replaceAll("\\\\", "/");
-  const inOpenclaw =
-    normalized === "~/.openclaw" ||
-    normalized.startsWith("~/.openclaw/") ||
-    normalized.includes("/.openclaw/");
-  if (!inOpenclaw) {
-    throw new Error("Refusing to read remote media outside ~/.openclaw");
+  const inHermesStateDir =
+    normalized === "~/.hermes" ||
+    normalized.startsWith("~/.hermes/") ||
+    normalized.includes("/.hermes/");
+  if (!inHermesStateDir) {
+    throw new Error("Refusing to read remote media outside ~/.hermes");
   }
 
   return { remotePath: trimmed, mime };
@@ -142,7 +142,7 @@ except FileNotFoundError:
   raise SystemExit(3)
 
 home = pathlib.Path.home().resolve()
-allowed = (home / ".openclaw").resolve()
+allowed = (home / ".hermes").resolve()
 if resolved != allowed and allowed not in resolved.parents:
   print(json.dumps({"error": f"Refusing to read media outside {allowed}"}))
   raise SystemExit(4)
@@ -189,7 +189,7 @@ export async function GET(request: Request) {
 
     if (!sshTarget) {
       const { resolved, mime } = resolveAndValidateLocalMediaPath(rawPath);
-      const allowedRoot = path.join(os.homedir(), ".openclaw");
+      const allowedRoot = path.join(os.homedir(), ".hermes");
       const { bytes, size } = await readLocalMedia(resolved, allowedRoot);
       const body = new Blob([Uint8Array.from(bytes)], { type: mime });
       return new Response(body, {

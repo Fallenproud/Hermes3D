@@ -7,23 +7,23 @@ import { afterEach, describe, expect, it } from "vitest";
 const makeTempDir = (name: string) => fs.mkdtempSync(path.join(os.tmpdir(), `${name}-`));
 
 describe("server studio upstream gateway settings", () => {
-  const priorStateDir = process.env.OPENCLAW_STATE_DIR;
+  const priorStateDir = process.env.HERMES_STATE_DIR;
   let tempDir: string | null = null;
 
   afterEach(() => {
-    process.env.OPENCLAW_STATE_DIR = priorStateDir;
+    process.env.HERMES_STATE_DIR = priorStateDir;
     if (tempDir) {
       fs.rmSync(tempDir, { recursive: true, force: true });
       tempDir = null;
     }
   });
 
-  it("falls back to openclaw.json token/port when studio settings are missing", async () => {
-    tempDir = makeTempDir("studio-upstream-openclaw-defaults");
-    process.env.OPENCLAW_STATE_DIR = tempDir;
+  it("falls back to hermes.json token/port when studio settings are missing", async () => {
+    tempDir = makeTempDir("studio-upstream-hermes-defaults");
+    process.env.HERMES_STATE_DIR = tempDir;
 
     fs.writeFileSync(
-      path.join(tempDir, "openclaw.json"),
+      path.join(tempDir, "hermes.json"),
       JSON.stringify({ gateway: { port: 18790, auth: { token: "tok" } } }, null, 2),
       "utf8"
     );
@@ -34,9 +34,9 @@ describe("server studio upstream gateway settings", () => {
     expect(settings.token).toBe("tok");
   });
 
-  it("keeps a configured url and fills token from openclaw.json when missing", async () => {
+  it("keeps a configured url and fills token from hermes.json when missing", async () => {
     tempDir = makeTempDir("studio-upstream-url-keep");
-    process.env.OPENCLAW_STATE_DIR = tempDir;
+    process.env.HERMES_STATE_DIR = tempDir;
 
     fs.mkdirSync(path.join(tempDir, "hermes3d"), { recursive: true });
     fs.writeFileSync(
@@ -45,7 +45,7 @@ describe("server studio upstream gateway settings", () => {
       "utf8"
     );
     fs.writeFileSync(
-      path.join(tempDir, "openclaw.json"),
+      path.join(tempDir, "hermes.json"),
       JSON.stringify({ gateway: { port: 18789, auth: { token: "tok-local" } } }, null, 2),
       "utf8"
     );

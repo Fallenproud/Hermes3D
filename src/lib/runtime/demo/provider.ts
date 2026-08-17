@@ -9,7 +9,7 @@ import {
   sendAgentHandoffViaRuntime,
   sendDirectedAgentMessageViaRuntime,
 } from "@/lib/runtime/agentMessaging";
-import { normalizeGatewayEvent } from "@/lib/runtime/openclaw/normalizeGatewayEvent";
+import { normalizeGatewayEvent } from "@/lib/runtime/normalizeGatewayEvent";
 import type { RuntimeCapability, RuntimeEvent, RuntimeProvider } from "@/lib/runtime/types";
 
 const DEMO_RUNTIME_CAPABILITIES: ReadonlySet<RuntimeCapability> = new Set([

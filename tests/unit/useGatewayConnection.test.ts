@@ -27,7 +27,7 @@ const setupAndImportHook = async (gatewayUrl: string | null) => {
     clientName: null,
   };
 
-  vi.doMock("../../src/lib/gateway/openclaw/GatewayBrowserClient", () => {
+  vi.doMock("../../src/lib/gateway/protocol/GatewayBrowserClient", () => {
     class GatewayBrowserClient {
       connected = false;
       private opts: {
@@ -52,7 +52,7 @@ const setupAndImportHook = async (gatewayUrl: string | null) => {
 
       start() {
         this.connected = true;
-        this.opts.onHello?.({ type: "hello-ok", protocol: 1, adapterType: "openclaw" });
+        this.opts.onHello?.({ type: "hello-ok", protocol: 1, adapterType: "hermes" });
       }
 
       stop() {
@@ -80,17 +80,17 @@ const setupAndImportHook = async (gatewayUrl: string | null) => {
     }) => {
       gatewayUrl: string;
       token: string;
-      selectedAdapterType: "openclaw" | "hermes" | "demo" | "custom";
-      detectedAdapterType: "openclaw" | "hermes" | "demo" | "custom" | null;
-      activeAdapterType: "openclaw" | "hermes" | "demo" | "custom";
+      selectedAdapterType: "hermes" | "hermes" | "demo" | "custom";
+      detectedAdapterType: "hermes" | "hermes" | "demo" | "custom" | null;
+      activeAdapterType: "hermes" | "hermes" | "demo" | "custom";
       localGatewayDefaults: {
         url: string;
         token: string;
-        adapterType: "openclaw" | "hermes" | "demo" | "custom";
+        adapterType: "hermes" | "hermes" | "demo" | "custom";
       } | null;
       shouldPromptForConnect: boolean;
       useLocalGatewayDefaults: () => void;
-      setSelectedAdapterType: (value: "openclaw" | "hermes" | "demo" | "custom") => void;
+      setSelectedAdapterType: (value: "hermes" | "hermes" | "demo" | "custom") => void;
       connect: () => Promise<void>;
     },
     captured,
@@ -193,10 +193,10 @@ describe("useGatewayConnection", () => {
     });
     expect(captured.token).toBe("");
     expect(captured.authScopeKey).toBe("wss://remote.example");
-    expect(captured.clientName).toBe("openclaw-control-ui");
+    expect(captured.clientName).toBe("hermes3d-control-ui");
   });
 
-  it("uses_webchat_identity_for_remote_openclaw_connections", async () => {
+  it("keeps_control_ui_identity_for_remote_connections", async () => {
     const { useGatewayConnection, captured } = await setupAndImportHook(null);
     const coordinator = {
       loadSettings: async () => null,
@@ -206,11 +206,11 @@ describe("useGatewayConnection", () => {
           gateway: {
             url: "wss://pi5.myth-coho.ts.net",
             token: "shared-token",
-            adapterType: "openclaw",
+            adapterType: "hermes",
             lastKnownGood: {
               url: "wss://pi5.myth-coho.ts.net",
               token: "shared-token",
-              adapterType: "openclaw",
+              adapterType: "hermes",
             },
           },
           focused: {},
@@ -239,10 +239,10 @@ describe("useGatewayConnection", () => {
       expect(captured.url).toBe("ws://localhost:3000/api/gateway/ws");
     });
     expect(captured.authScopeKey).toBe("wss://pi5.myth-coho.ts.net");
-    expect(captured.clientName).toBe("webchat-ui");
+    expect(captured.clientName).toBe("hermes3d-control-ui");
   });
 
-  it("keeps_control_ui_identity_for_local_openclaw_connections", async () => {
+  it("keeps_control_ui_identity_for_local_hermes_connections", async () => {
     const { useGatewayConnection, captured } = await setupAndImportHook(null);
     const coordinator = {
       loadSettings: async () => null,
@@ -252,11 +252,11 @@ describe("useGatewayConnection", () => {
           gateway: {
             url: "ws://localhost:18789",
             token: "shared-token",
-            adapterType: "openclaw",
+            adapterType: "hermes",
             lastKnownGood: {
               url: "ws://localhost:18789",
               token: "shared-token",
-              adapterType: "openclaw",
+              adapterType: "hermes",
             },
           },
           focused: {},
@@ -285,7 +285,7 @@ describe("useGatewayConnection", () => {
       expect(captured.url).toBe("ws://localhost:3000/api/gateway/ws");
     });
     expect(captured.authScopeKey).toBe("ws://localhost:18789");
-    expect(captured.clientName).toBe("openclaw-control-ui");
+    expect(captured.clientName).toBe("hermes3d-control-ui");
   });
 
   it("does_not_auto_connect_without_a_last_known_good_state", async () => {
@@ -340,7 +340,6 @@ describe("useGatewayConnection", () => {
 
   it("uses_a_small_initial_auto_connect_delay_for_hermes_and_demo_only", async () => {
     const mod = await import("@/lib/gateway/GatewayClient");
-    expect(mod.resolveInitialGatewayAutoConnectDelayMs("openclaw")).toBe(0);
     expect(mod.resolveInitialGatewayAutoConnectDelayMs("custom")).toBe(0);
     expect(mod.resolveInitialGatewayAutoConnectDelayMs("hermes")).toBe(900);
     expect(mod.resolveInitialGatewayAutoConnectDelayMs("demo")).toBe(900);
@@ -348,26 +347,17 @@ describe("useGatewayConnection", () => {
 
   it("retries_only_the_first_connect_for_hermes_and_demo", async () => {
     const mod = await import("@/lib/gateway/GatewayClient");
-    expect(mod.resolveInitialGatewayConnectAttemptCount("openclaw", false)).toBe(1);
     expect(mod.resolveInitialGatewayConnectAttemptCount("custom", false)).toBe(1);
     expect(mod.resolveInitialGatewayConnectAttemptCount("hermes", false)).toBe(2);
     expect(mod.resolveInitialGatewayConnectAttemptCount("demo", false)).toBe(2);
     expect(mod.resolveInitialGatewayConnectAttemptCount("hermes", true)).toBe(2);
     expect(mod.resolveInitialGatewayConnectAttemptCount("demo", true)).toBe(2);
-    expect(mod.resolveInitialGatewayConnectAttemptCount("openclaw", true)).toBe(1);
+    expect(mod.resolveInitialGatewayConnectAttemptCount("custom", true)).toBe(1);
   });
 
-  it("uses_webchat_client_id_only_for_remote_openclaw", async () => {
+  it("uses_the_control_ui_client_id_for_every_backend", async () => {
     const mod = await import("@/lib/gateway/GatewayClient");
-    expect(mod.resolveGatewayClientName("openclaw", "wss://pi5.myth-coho.ts.net")).toBe(
-      "webchat-ui"
-    );
-    expect(mod.resolveGatewayClientName("openclaw", "ws://localhost:18789")).toBe(
-      "openclaw-control-ui"
-    );
-    expect(mod.resolveGatewayClientName("hermes", "ws://localhost:18789")).toBe(
-      "openclaw-control-ui"
-    );
+    expect(mod.resolveGatewayClientName()).toBe("hermes3d-control-ui");
   });
 
   it("auto_applies_runtime_local_defaults_when_no_saved_gateway_and_build_time_empty", async () => {
@@ -545,7 +535,6 @@ describe("useGatewayConnection", () => {
     };
     expect(firstPatch.gateway?.token).toBeUndefined();
     expect(firstPatch.gateway?.adapterType).toBe("hermes");
-    expect(firstPatch.gateway?.profiles?.openclaw?.token).toBe("");
     expect(firstPatch.gateway?.profiles?.hermes?.token).toBeUndefined();
     expect(firstPatch.gateway?.profiles?.demo?.token).toBe("");
     expect(firstPatch.gateway?.profiles?.local?.token).toBe("");
@@ -565,8 +554,8 @@ describe("useGatewayConnection", () => {
             adapterType: "hermes",
             lastKnownGood: {
               url: "ws://localhost:9999",
-              token: "openclaw-token",
-              adapterType: "openclaw",
+              token: "hermes-token",
+              adapterType: "hermes",
             },
           },
           focused: {},
@@ -796,7 +785,7 @@ describe("useGatewayConnection", () => {
         lastKnownGood: {
           url: "wss://remote.example",
           token: undefined,
-          adapterType: "openclaw",
+          adapterType: "hermes",
         },
       },
     });

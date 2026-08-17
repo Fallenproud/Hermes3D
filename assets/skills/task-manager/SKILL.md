@@ -1,7 +1,7 @@
 ---
 name: task-manager
 description: Capture actionable user requests as persistent tasks, update task status as work progresses, and keep a shared task store in sync. Use when a user asks an agent to do work, check progress, block a task, complete a task, or manage the Kanban board.
-metadata: {"openclaw":{"skillKey":"task-manager"}}
+metadata: {"hermes":{"skillKey":"task-manager"}}
 ---
 
 # Task Manager
@@ -36,8 +36,8 @@ Also use this skill even when those exact phrases are absent if the latest user 
 
 The authoritative task file is:
 
-- `${OPENCLAW_STATE_DIR}/hermes3d/task-manager/tasks.json` when `OPENCLAW_STATE_DIR` is set.
-- `~/.openclaw/hermes3d/task-manager/tasks.json` otherwise.
+- `${HERMES_STATE_DIR}/hermes3d/task-manager/tasks.json` when `HERMES_STATE_DIR` is set.
+- `~/.hermes/hermes3d/task-manager/tasks.json` otherwise.
 
 Always treat that file as the shared source of truth for the Kanban board.
 

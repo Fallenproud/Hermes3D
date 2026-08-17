@@ -8,18 +8,18 @@ This release converges the runtime-profiles, office-systems, hermes3doctor, and 
 
 ### Added
 
-- Named runtime profiles for `openclaw`, `hermes`, `demo`, `local`, `hermes3d`, and `custom` backends, each storing its own URL and token in Studio settings instead of a single global pair (`docs/runtime-profiles.md`, `src/lib/runtime/*`).
-- Multi-floor office runtime model with one runtime binding per floor and persistent per-floor state, including `lobby`, `openclaw-ground`, `hermes-first`, `local-runtime`, `hermes3d-runtime`, `custom-second`, `training`, `traders-floor`, and `campus` (`src/lib/office/floors.ts`, `docs/office_sys/multi-floor-runtime-architecture.md`).
+- Named runtime profiles for `hermes`, `demo`, `local`, `hermes3d`, and `custom` backends, each storing its own URL and token in Studio settings instead of a single global pair (`docs/runtime-profiles.md`, `src/lib/runtime/*`).
+- Multi-floor office runtime model with one runtime binding per floor and persistent per-floor state, including `lobby`, `hermes-ground`, `hermes-first`, `local-runtime`, `hermes3d-runtime`, `custom-second`, `training`, `traders-floor`, and `campus` (`src/lib/office/floors.ts`, `docs/office_sys/multi-floor-runtime-architecture.md`).
 - Floor roster persistence and a floor navigation HUD for moving between runtime-backed floors in a single session (`src/lib/office/floorRoster.ts`, `src/features/office/components/OfficeFloorNav.tsx`, `src/features/office/hooks/useOfficeFloorRuntimePersistence.ts`).
 - Remote office messaging API for cross-office direct messages with structured assistant-history reply resolution (`src/app/api/office/remote-message/route.ts`).
 - Remote office handoff API for sending task / context / deliverables / acceptance criteria to a remote agent through the runtime layer (`src/app/api/office/remote-handoff/route.ts`, `src/lib/runtime/agentMessaging.ts`).
 - Local file upload route for chat attachments with allowlisted MIME types and a 10 MB upload cap (`src/app/api/files/upload/route.ts`).
-- `hermes3doctor` diagnostics CLI with profile-scoped and `--all-profiles` runs, OpenClaw / Hermes / demo / custom-runtime probes, gateway failure classification, JSON output, and a `npm run doctor` script (`scripts/hermes3doctor.mjs`, `scripts/lib/hermes3doctor-core.mjs`, `package.json`).
+- `hermes3doctor` diagnostics CLI with profile-scoped and `--all-profiles` runs, Hermes / demo / custom-runtime probes, gateway failure classification, JSON output, and a `npm run doctor` script (`scripts/hermes3doctor.mjs`, `scripts/lib/hermes3doctor-core.mjs`, `package.json`).
 - New product and architecture docs covering runtime profiles, multi-floor architecture, the hermes3doctor spec, runtime profile architecture, the refreshed roadmap, multi-agent beta, and the bulletin-board, desk-progression, hierarchy-and-teams, meeting-room-workflow, QA-department, and whiteboard specs (`docs/`).
 
 ### Changed
 
-- Runtime provider selection is now profile-aware across `openclaw`, `hermes`, `demo`, `local`, `hermes3d`, and `custom` instead of collapsing into one generic path (`src/lib/runtime/createRuntimeProvider.ts`, `src/lib/runtime/{openclaw,hermes,demo,custom}/provider.ts`).
+- Runtime provider selection is now profile-aware across `hermes`, `demo`, `local`, `hermes3d`, and `custom` instead of collapsing into one generic path (`src/lib/runtime/createRuntimeProvider.ts`, `src/lib/runtime/{hermes,demo,custom}/provider.ts`).
 - Studio settings now persist per-profile URL/token entries and an active profile selection, with coordinated bootstrap and hydration paths (`src/lib/studio/settings.ts`, `src/lib/studio/settings-store.ts`, `src/lib/studio/coordinator.ts`).
 - Remote agent chat panel and remote office presence flows updated for the new server-backed delivery and reply behavior (`src/features/office/components/RemoteAgentChatPanel.tsx`, `src/features/office/hooks/useRemoteOfficePresence.ts`).
 - Hardened production security headers: strict CSP with `'unsafe-eval'` only in dev, `Referrer-Policy`, `X-Content-Type-Options`, `X-Frame-Options: SAMEORIGIN`, restrictive `Permissions-Policy`, `Cross-Origin-Resource-Policy: same-origin`, and HSTS in production (`next.config.ts`).
@@ -29,7 +29,7 @@ This release converges the runtime-profiles, office-systems, hermes3doctor, and 
 ### Fixed
 
 - Repaired merge-corrupted files and removed tracked merge artifacts left over from the earlier overlapping branch stack.
-- Resolved a UTF-8 / Turbopack parsing issue and cleaned up Turbopack root and optional `openclaw` resolution warnings (`next.config.ts`).
+- Resolved a UTF-8 / Turbopack parsing issue and cleaned up Turbopack root and optional-dependency resolution warnings (`next.config.ts`).
 - Office navigation and pathfinding behavior tightened around floor-aware routing and runtime persistence (`src/features/office/screens/OfficeScreen.tsx`, `src/features/retro-office/RetroOffice3D.tsx`).
 
 ### Tests
@@ -90,7 +90,7 @@ This release expands Hermes3D from a single-office viewer into a more complete A
 - An in-app avatar creator for agents with live 3D preview, appearance presets, and accessory controls for customizing office avatars.
 - A unified agent editor modal in the office that lets you edit avatars alongside agent brain files such as `IDENTITY.md`, `SOUL.md`, `AGENTS.md`, `USER.md`, `TOOLS.md`, `MEMORY.md`, and `HEARTBEAT.md`.
 - Structured avatar profile persistence and normalization so studio settings can store full avatar appearance data per gateway and agent instead of only avatar seeds.
-- A `DEBUG` environment toggle for controlling the OpenClaw event console in the office UI.
+- A `DEBUG` environment toggle for controlling the gateway event console in the office UI.
 
 ### Changed
 
@@ -98,7 +98,7 @@ This release expands Hermes3D from a single-office viewer into a more complete A
 - Replaced avatar shuffle entry points in the chat and office surfaces with avatar customization flows that open the editor directly.
 - Updated the office HUD with a compact agent roster, overflow handling, and direct shortcuts into per-agent editing from the 3D office view.
 - Expanded the brain editor so `IDENTITY.md` fields are edited in structured form and agent renames can be applied to the live gateway agent after saving.
-- Defaulted the OpenClaw event console to a collapsed state and made it optional from environment configuration.
+- Defaulted the gateway event console to a collapsed state and made it optional from environment configuration.
 - Updated hydration and store state to carry full avatar profiles through agent loading, persistence, and rendering.
 
 ### Fixed
@@ -124,6 +124,6 @@ This release expands Hermes3D from a single-office viewer into a more complete A
 ### Added
 
 - Initial public Hermes3D project documentation, including `README.md`, `VISION.md`, and `ARCHITECTURE.md`.
-- A gateway-first web UI for connecting to OpenClaw agents, monitoring runtime activity, and managing agent workflows.
+- A gateway-first web UI for connecting to backend agents, monitoring runtime activity, and managing agent workflows.
 - A retro-office 3D environment for visualizing agent activity, spatial interactions, and immersive operational surfaces.
 - An office builder flow for editing and publishing office layouts.
