@@ -17,7 +17,7 @@ import { normalizeAgentAvatarProfile } from "@/lib/avatars/profile";
 import {
   defaultTaskBoardPreference,
   isTaskBoardSource,
-  isTaskBoardStatus,
+  normalizeTaskBoardStatus,
   type TaskBoardCard,
   type TaskBoardPreference,
   type TaskBoardPreferencePatch,
@@ -447,7 +447,7 @@ export const defaultStudioTaskBoardPreference =
 export const defaultStudioFloorRuntimeState = (
   floorId: FloorId,
 ): StudioFloorRuntimeState => {
-  const floor = getOfficeFloor(floorId);
+  const floor = getOfficeFloor();
   return {
     floorId,
     provider: floor.provider,
@@ -494,7 +494,7 @@ const normalizeTaskBoardCard = (
     id: coerceString(record.id) || fallback?.id || "",
     title: coerceString(record.title) || fallback?.title || "Untitled task",
     description: coerceString(record.description) || fallback?.description || "",
-    status: isTaskBoardStatus(record.status) ? record.status : (fallback?.status ?? "todo"),
+    status: normalizeTaskBoardStatus(record.status) ?? fallback?.status ?? "inbox",
     source: isTaskBoardSource(record.source)
       ? record.source
       : (fallback?.source ?? "hermes3d_manual"),
@@ -521,6 +521,20 @@ const normalizeTaskBoardCard = (
       typeof record.isArchived === "boolean" ? record.isArchived : (fallback?.isArchived ?? false),
     isInferred:
       typeof record.isInferred === "boolean" ? record.isInferred : (fallback?.isInferred ?? false),
+    model: coerceString(record.model) || fallback?.model || null,
+    skills: normalizeTaskBoardNotes(record.skills, fallback?.skills ?? []),
+    subagentCount:
+      typeof record.subagentCount === "number" &&
+      Number.isFinite(record.subagentCount) &&
+      record.subagentCount >= 0
+        ? Math.floor(record.subagentCount)
+        : (fallback?.subagentCount ?? 0),
+    scheduledFor:
+      normalizeOptionalIsoString(record.scheduledFor, fallback?.scheduledFor ?? null) ?? null,
+    learnedSkill:
+      typeof record.learnedSkill === "boolean"
+        ? record.learnedSkill
+        : (fallback?.learnedSkill ?? false),
   };
 };
 
@@ -1218,7 +1232,7 @@ const normalizeFloorRuntimeState = (
   fallback: StudioFloorRuntimeState = defaultStudioFloorRuntimeState(floorId),
 ): StudioFloorRuntimeState => {
   if (!isRecord(value)) return fallback;
-  const floor = getOfficeFloor(floorId);
+  const floor = getOfficeFloor();
   const runtimeProfileIdRaw =
     value.runtimeProfileId === null || value.runtimeProfileId === undefined
       ? fallback.runtimeProfileId

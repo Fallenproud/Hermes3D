@@ -221,11 +221,12 @@ import {
 import {
   getGraphicsQualityConfig,
   isSoftwareWebGLRenderer,
-  loadGraphicsQuality,
+  resolveInitialGraphicsQuality,
   loadStoredGraphicsQuality,
   saveGraphicsQuality,
   type GraphicsQuality,
 } from "@/features/retro-office/core/graphicsQuality";
+import { SceneErrorBoundary } from "@/features/retro-office/systems/SceneErrorBoundary";
 import {
   FloorRaycaster as SceneFloorRaycaster,
   GameLoop as SceneGameLoop,
@@ -2339,10 +2340,10 @@ export function RetroOffice3D({
   onKanbanInteract,
   taskBoardAgents = [],
   taskBoardCardsByStatus = {
-    todo: [],
-    in_progress: [],
-    blocked: [],
-    review: [],
+    inbox: [],
+    scheduled: [],
+    working: [],
+    needs_attention: [],
     done: [],
   },
   taskBoardSelectedCard = null,
@@ -2664,7 +2665,7 @@ export function RetroOffice3D({
   const [spotlightAgentId, setSpotlightAgentId] = useState<string | null>(null);
   const [settingsModalOpen, setSettingsModalOpen] = useState(false);
   const [graphicsQuality, setGraphicsQualityState] = useState<GraphicsQuality>(() =>
-    loadGraphicsQuality(),
+    resolveInitialGraphicsQuality(),
   );
   const graphicsQualityConfig = useMemo(
     () => getGraphicsQualityConfig(graphicsQuality),
@@ -2681,9 +2682,8 @@ export function RetroOffice3D({
       gl.domElement.addEventListener("webglcontextlost", (event) => {
         event.preventDefault();
       });
-      // Software rasterizers (SwiftShader, llvmpipe) cannot keep up with the
-      // full pipeline and may lose the context. Drop to the low preset unless
-      // the user explicitly picked a quality.
+      // Late safety net: if the pre-mount probe missed a software rasterizer
+      // (some browsers only reveal it on the real context), drop to low.
       if (
         loadStoredGraphicsQuality() === null &&
         isSoftwareWebGLRenderer(gl.getContext())
@@ -5236,6 +5236,7 @@ export function RetroOffice3D({
           5. Floor/walls render immediately (no Suspense). Only GLB models are suspended.
         */}
         {!immersiveOverlayActive ? (
+          <SceneErrorBoundary>
           <Canvas
             key={canvasResetKey}
             dpr={[0.85, graphicsQualityConfig.maxDpr]}
@@ -5879,6 +5880,7 @@ export function RetroOffice3D({
               onClick={handleFloorClick}
             />
           </Canvas>
+          </SceneErrorBoundary>
         ) : null}
       </div>
 
