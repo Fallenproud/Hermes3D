@@ -25,7 +25,7 @@ import {
   useState,
 } from "react";
 import { Canvas, useFrame, useThree } from "@react-three/fiber";
-import { Environment, OrbitControls } from "@react-three/drei";
+import { OrbitControls } from "@react-three/drei";
 import * as THREE from "three";
 import { SettingsPanel } from "@/features/office/components/panels/SettingsPanel";
 import { AtmImmersiveScreen } from "@/features/office/screens/AtmImmersiveScreen";
@@ -94,7 +94,6 @@ import {
 } from "@/features/retro-office/core/furnitureDefaults";
 import {
   clampPointToZone,
-  DISTRICT_CAMERA_POSITION,
   DISTRICT_CAMERA_TARGET,
   DISTRICT_CAMERA_ZOOM,
   LOCAL_OFFICE_CANVAS_HEIGHT,
@@ -211,8 +210,22 @@ import {
 import {
   CAMERA_PRESETS as CAMERA_PRESET_MAP,
   CameraAnimator as CameraPresetAnimator,
+  computeOverviewCameraPosition,
   FollowCamController as FollowCamSystem,
+  SCENE_CAMERA_FOV,
 } from "@/features/retro-office/systems/cameraLighting";
+import {
+  SceneAtmosphere,
+  ScenePostFx,
+} from "@/features/retro-office/systems/atmosphere";
+import {
+  getGraphicsQualityConfig,
+  isSoftwareWebGLRenderer,
+  loadGraphicsQuality,
+  loadStoredGraphicsQuality,
+  saveGraphicsQuality,
+  type GraphicsQuality,
+} from "@/features/retro-office/core/graphicsQuality";
 import {
   FloorRaycaster as SceneFloorRaycaster,
   GameLoop as SceneGameLoop,
@@ -789,14 +802,14 @@ const ReadOnlyFurnitureClone = memo(function ReadOnlyFurnitureClone({
   );
 });
 
-function AdaptiveDprController() {
+function AdaptiveDprController({ maxDpr: maxDprCap = 1.5 }: { maxDpr?: number }) {
   const { gl, setDpr } = useThree();
   const currentDprRef = useRef(1.25);
   const frameCounterRef = useRef(0);
   const avgDeltaRef = useRef(1 / 60);
 
   useEffect(() => {
-    const initialDpr = Math.min(window.devicePixelRatio || 1, 1.5);
+    const initialDpr = Math.min(window.devicePixelRatio || 1, maxDprCap);
     currentDprRef.current = initialDpr;
     setDpr(initialDpr);
     const handleVisibilityChange = () => {
@@ -805,7 +818,7 @@ function AdaptiveDprController() {
         setDpr(0.85);
         return;
       }
-      const restoredDpr = Math.min(window.devicePixelRatio || 1, 1.5);
+      const restoredDpr = Math.min(window.devicePixelRatio || 1, maxDprCap);
       currentDprRef.current = restoredDpr;
       setDpr(restoredDpr);
     };
@@ -813,7 +826,7 @@ function AdaptiveDprController() {
     return () => {
       document.removeEventListener("visibilitychange", handleVisibilityChange);
     };
-  }, [setDpr]);
+  }, [setDpr, maxDprCap]);
 
   useFrame((_, delta) => {
     if (document.visibilityState !== "visible") return;
@@ -822,7 +835,7 @@ function AdaptiveDprController() {
     if (frameCounterRef.current < 45) return;
     frameCounterRef.current = 0;
 
-    const maxDpr = Math.min(window.devicePixelRatio || 1, 1.5);
+    const maxDpr = Math.min(window.devicePixelRatio || 1, maxDprCap);
     const minDpr = 0.85;
     let nextDpr = currentDprRef.current;
     if (avgDeltaRef.current > 1 / 42) {
@@ -2615,21 +2628,14 @@ export function RetroOffice3D({
       toWorld(LOCAL_OFFICE_CANVAS_WIDTH / 2, LOCAL_OFFICE_CANVAS_HEIGHT / 2),
     [],
   );
-  const CAM_POS = useMemo<[number, number, number]>(() => {
-    if (remoteOfficeEnabled) return DISTRICT_CAMERA_POSITION;
-    return [
-      LOCAL_CAMERA_TARGET[0] +
-        (DISTRICT_CAMERA_POSITION[0] - DISTRICT_CAMERA_TARGET[0]),
-      LOCAL_CAMERA_TARGET[1] +
-        (DISTRICT_CAMERA_POSITION[1] - DISTRICT_CAMERA_TARGET[1]),
-      LOCAL_CAMERA_TARGET[2] +
-        (DISTRICT_CAMERA_POSITION[2] - DISTRICT_CAMERA_TARGET[2]),
-    ];
-  }, [LOCAL_CAMERA_TARGET, remoteOfficeEnabled]);
   const cameraTarget = remoteOfficeEnabled
     ? DISTRICT_CAMERA_TARGET
     : LOCAL_CAMERA_TARGET;
   const cameraZoom = remoteOfficeEnabled ? DISTRICT_CAMERA_ZOOM : 56;
+  const CAM_POS = useMemo<[number, number, number]>(
+    () => computeOverviewCameraPosition(cameraTarget, cameraZoom),
+    [cameraTarget, cameraZoom],
+  );
   const overviewPreset = useMemo(
     () => ({ pos: CAM_POS, target: cameraTarget, zoom: cameraZoom }),
     [CAM_POS, cameraTarget, cameraZoom]
@@ -2657,6 +2663,37 @@ export function RetroOffice3D({
   // E3 Idea 3: spotlight.
   const [spotlightAgentId, setSpotlightAgentId] = useState<string | null>(null);
   const [settingsModalOpen, setSettingsModalOpen] = useState(false);
+  const [graphicsQuality, setGraphicsQualityState] = useState<GraphicsQuality>(() =>
+    loadGraphicsQuality(),
+  );
+  const graphicsQualityConfig = useMemo(
+    () => getGraphicsQualityConfig(graphicsQuality),
+    [graphicsQuality],
+  );
+  const setGraphicsQuality = useCallback((quality: GraphicsQuality) => {
+    setGraphicsQualityState(quality);
+    saveGraphicsQuality(quality);
+  }, []);
+  const handleCanvasCreated = useCallback(
+    ({ gl }: { gl: THREE.WebGLRenderer }) => {
+      // Allow the browser to restore a lost context instead of killing the
+      // canvas — three re-uploads all GPU resources on restore.
+      gl.domElement.addEventListener("webglcontextlost", (event) => {
+        event.preventDefault();
+      });
+      // Software rasterizers (SwiftShader, llvmpipe) cannot keep up with the
+      // full pipeline and may lose the context. Drop to the low preset unless
+      // the user explicitly picked a quality.
+      if (
+        loadStoredGraphicsQuality() === null &&
+        isSoftwareWebGLRenderer(gl.getContext())
+      ) {
+        setGraphicsQualityState("low");
+      }
+    },
+    [],
+  );
+  const followFocusPointRef = useRef(new THREE.Vector3());
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const orbitRef = useRef<any>(null);
   // Follow cam: which agent to trail with a third-person perspective camera.
@@ -2870,7 +2907,24 @@ export function RetroOffice3D({
           status: agent.status,
         };
       }
-      setRenderAgentUiById(next);
+      // Keep the previous object when nothing changed so idle frames do not
+      // trigger a React re-render every sync tick.
+      setRenderAgentUiById((previous) => {
+        const previousIds = Object.keys(previous);
+        if (previousIds.length === Object.keys(next).length) {
+          let identical = true;
+          for (const id of previousIds) {
+            const before = previous[id];
+            const after = next[id];
+            if (!after || before.state !== after.state || before.status !== after.status) {
+              identical = false;
+              break;
+            }
+          }
+          if (identical) return previous;
+        }
+        return next;
+      });
     };
 
     syncRenderAgentUi();
@@ -5184,24 +5238,29 @@ export function RetroOffice3D({
         {!immersiveOverlayActive ? (
           <Canvas
             key={canvasResetKey}
-            orthographic
-            dpr={[0.85, 1.5]}
+            dpr={[0.85, graphicsQualityConfig.maxDpr]}
             camera={{
               position: CAM_POS,
-              zoom: cameraZoom,
-              near: 0.1,
-              far: 100,
+              fov: SCENE_CAMERA_FOV,
+              near: 0.3,
+              far: 320,
             }}
             shadows={{ type: THREE.PCFShadowMap }}
-            gl={{ antialias: true, powerPreference: "high-performance" }}
+            gl={{
+              antialias: true,
+              powerPreference: "high-performance",
+              toneMapping: THREE.ACESFilmicToneMapping,
+              toneMappingExposure: 1.0,
+            }}
             style={{ width: "100%", height: "100%" }}
+            onCreated={handleCanvasCreated}
             onPointerUp={() => {
               if (drag.kind === "moving") setDrag({ kind: "idle" });
             }}
           >
             {/* Ensure camera looks at the active office target after mount. */}
             <CameraRig target={cameraTarget} />
-            <AdaptiveDprController />
+            <AdaptiveDprController maxDpr={graphicsQualityConfig.maxDpr} />
 
             {/* Orbit / pan / zoom controls — disabled while follow cam is active or while editing furniture. */}
             <OrbitControls
@@ -5213,8 +5272,8 @@ export function RetroOffice3D({
               rotateSpeed={0.6}
               zoomSpeed={0.8}
               panSpeed={0.6}
-              minZoom={25}
-              maxZoom={120}
+              minDistance={4}
+              maxDistance={65}
               maxPolarAngle={Math.PI / 2.2}
               enableRotate={!spaceDown}
               mouseButtons={{
@@ -5238,6 +5297,7 @@ export function RetroOffice3D({
               followRef={followAgentIdRef}
               agentsRef={renderAgentsRef}
               agentLookupRef={renderAgentLookupRef}
+              focusPointRef={followFocusPointRef}
             />
 
             {/* E3 Idea 3: Spotlight effect on agent chip click. */}
@@ -5247,21 +5307,17 @@ export function RetroOffice3D({
               agentLookupRef={renderAgentLookupRef}
             />
 
-            {/* Keep office lighting static to avoid extra scene churn from ambience effects. */}
-            <ambientLight intensity={0.72} color="#d8d4c8" />
-            <directionalLight
-              position={[8, 14, 6]}
-              intensity={1.1}
-              color="#f6f1e6"
-              castShadow
-              shadow-mapSize={[1024, 1024]}
-              shadow-bias={-0.0002}
-              shadow-normalBias={0.02}
+            {/* Sky, image-based lighting, sun rig, fog and daylight drift. */}
+            <SceneAtmosphere
+              config={graphicsQualityConfig}
+              remoteOfficeEnabled={remoteOfficeEnabled}
             />
-            <directionalLight
-              position={[-5, 8, -4]}
-              intensity={0.4}
-              color="#7090ff"
+
+            {/* Post-processing: AO, bloom, vignette, filmic tone mapping. */}
+            <ScenePostFx
+              config={graphicsQualityConfig}
+              followActive={followAgentId !== null}
+              followFocusPointRef={followFocusPointRef}
             />
 
             {/* Floor + walls — always visible, no async loading. */}
@@ -5269,11 +5325,6 @@ export function RetroOffice3D({
 
             {/* Wall pictures — procedural, no async loading. */}
             <SceneWallPictures showRemoteOffice={remoteOfficeEnabled} />
-
-            {/* Environment lighting — async, wrapped in its own Suspense so floor stays visible. */}
-            <Suspense fallback={null}>
-              <Environment preset="city" />
-            </Suspense>
 
             {/* Furniture models — each loads its GLB asynchronously. */}
             <Suspense fallback={null}>
@@ -7084,6 +7135,8 @@ export function RetroOffice3D({
             </div>
             <div className="min-h-0 flex-1 overflow-y-auto">
               <SettingsPanel
+                graphicsQuality={graphicsQuality}
+                onGraphicsQualityChange={setGraphicsQuality}
                 gatewayStatus={gatewayStatus}
                 gatewayUrl={gatewayUrl}
                 gatewayToken={gatewayToken}
