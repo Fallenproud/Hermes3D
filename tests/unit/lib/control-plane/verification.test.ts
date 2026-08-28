@@ -5,7 +5,7 @@ const task = {
   taskId: "task-1",
   verification: {
     required: true,
-    minimumConfidence: 0.8,
+    minimumConfidence: 0.66,
   },
 };
 
